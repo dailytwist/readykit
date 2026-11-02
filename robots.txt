@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dailytwist.github.io/readykit/sitemap.xml
