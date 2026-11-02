@@ -149,3 +149,37 @@ footer a:hover{text-decoration:underline}
   section{padding:56px 0}
   .note{display:none}
 }
+
+/* product pages */
+.card h3 a{text-decoration:none}
+.card h3 a:hover{text-decoration:underline}
+.card a.pic{display:block}
+.pp{padding-top:22px;padding-bottom:40px}
+.crumbs{font-size:14px;color:var(--muted);margin-bottom:22px}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.pp-top{display:grid;grid-template-columns:1.15fr 1fr;gap:44px;align-items:start}
+.main-img{background:var(--mist);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+.main-img img{width:100%;height:100%;object-fit:contain}
+.thumbs{display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:4px}
+.thumbs button{flex:0 0 84px;height:66px;padding:0;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--mist);cursor:pointer;overflow:hidden}
+.thumbs button:hover{border-color:var(--ink-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.buybox{position:sticky;top:90px}
+.buybox h1{font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:800;margin:4px 0 14px}
+.lede{font-size:17px;color:var(--muted);margin:0 0 22px}
+.pp-price{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.pp-price .amount{color:var(--ink)}
+.small{font-size:14px;color:var(--muted)}
+.buybox .btn{width:100%;padding:16px 24px;font-size:16px}
+.ticks{list-style:none;padding:0;margin:22px 0 0}
+.ticks li{padding-left:24px;position:relative;margin-bottom:8px}
+.ticks li::before{content:"";position:absolute;left:2px;top:8px;width:12px;height:7px;border-left:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(-45deg)}
+.upsell{margin-top:22px;background:var(--hi);color:var(--ink);border-radius:var(--r-md);padding:14px 16px;font-size:15px}
+.upsell a{font-weight:700}
+.pp-info{padding:64px 0 24px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+.cols h2{font-size:28px}
+.pp-more{padding:40px 0 0}
+.pp-more h2{font-size:28px;margin-bottom:22px}
+@media (max-width:960px){.pp-top,.cols{grid-template-columns:1fr}.buybox{position:static}}
+.pp-top>*,.cols>*,.hero .wrap>*{min-width:0}
