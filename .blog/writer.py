@@ -25,11 +25,11 @@ def models():
     with urllib.request.urlopen(req, timeout=60) as r:
         names = [m["name"].split("/", 1)[1] for m in json.loads(r.read()).get("models", [])
                  if "generateContent" in m.get("supportedGenerationMethods", [])]
-    def score(n):
-        bad = any(x in n for x in ("preview", "exp", "tts", "image", "live", "audio", "embedding", "robotics", "lite", "gemma"))
+    def score(n):  # free tier: Flash first, then Flash-Lite; Pro has no free quota
+        bad = any(x in n for x in ("preview", "exp", "tts", "image", "live", "audio", "embedding", "robotics", "gemma", "pro", "thinking"))
         ver = [int(x) for x in re.findall(r"\d+", n)[:2]] + [0, 0]
-        return (not bad, "flash" in n or "pro" in n, "pro" in n, ver[0], ver[1])
-    return sorted(names, key=score, reverse=True)[:4]
+        return (not bad, "flash" in n, "lite" not in n, ver[0], ver[1])
+    return [n for n in sorted(names, key=score, reverse=True) if "flash" in n][:6]
 
 
 def ask(prompt):
@@ -46,7 +46,9 @@ def ask(prompt):
             except Exception as e:
                 last = f"{model}: {e}"
                 print("  retry:", last)
-                time.sleep(30 if "429" in str(e) else 8)
+                time.sleep(30 if "429" in str(e) else 45 if "503" in str(e) else 8)
+                if "404" in str(e) or ("429" in str(e) and attempt >= 1):
+                    break
     raise RuntimeError(last)
 
 
