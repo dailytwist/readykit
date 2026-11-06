@@ -1,0 +1,34 @@
+name: New guide (twice a week)
+on:
+  schedule:
+    - cron: "17 10 * * 1,4"   # Monday and Thursday, 10:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: guides
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Write one new guide with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python .blog/writer.py
+      - name: Build the guide pages, guides list and sitemap
+        run: python .blog/render.py
+      - name: Publish
+        run: |
+          git config user.name "readykit-bot"
+          git config user.email "readykit-bot@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then git commit -m "New guide $(date -u +%F)"; git pull --rebase origin main; git push; fi
+      - name: Tell Bing and Yandex (IndexNow)
+        continue-on-error: true
+        run: |
+          NEW=$(git show --name-only --format= HEAD | grep -E '^[a-z0-9-]+\.html$' | sed 's#^#"https://readykitshop.com/#; s#$#"#' | paste -sd, -)
+          [ -n "$NEW" ] && curl -s -X POST https://api.indexnow.org/indexnow -H "Content-Type: application/json" -d "{\"host\":\"readykitshop.com\",\"key\":\"992e85ef79984115be78013a0472925d\",\"keyLocation\":\"https://readykitshop.com/992e85ef79984115be78013a0472925d.txt\",\"urlList\":[$NEW,\"https://readykitshop.com/guides.html\",\"https://readykitshop.com/sitemap.xml\"]}" -w "%{http_code}\n" || true

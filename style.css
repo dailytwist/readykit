@@ -183,3 +183,7 @@ footer a:hover{text-decoration:underline}
 .pp-more h2{font-size:28px;margin-bottom:22px}
 @media (max-width:960px){.pp-top,.cols{grid-template-columns:1fr}.buybox{position:static}}
 .pp-top>*,.cols>*,.hero .wrap>*{min-width:0}
+
+footer .wrap>div:first-child{display:flex;flex-wrap:wrap;row-gap:8px;min-width:0}
+footer a{display:inline-block}
+html,body{overflow-x:hidden}
