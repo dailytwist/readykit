@@ -251,7 +251,7 @@ async function getWorker(){if(worker)return worker;const Ts=await loadT();worker
 function ctot(){$("#ctot").textContent=money(total())}
 async function openCam(){if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return $("#file").click();
   try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false})}catch(e){return $("#file").click()}
-  const v=$("#vid");v.srcObject=stream;await v.play().catch(()=>{});CQ=1;$("#cqv").textContent=1;$("#res").className="res";ctot();$("#camv").classList.add("on");getWorker().catch(()=>{})}
+  const v=$("#vid");v.srcObject=stream;await v.play().catch(()=>{});CQ=1;$("#cqv").textContent=1;$("#res").className="res";ctot();$("#camv").classList.add("on");if(AI_URL)fetch(AI_URL,{mode:"no-cors"}).catch(()=>{});else getWorker().catch(()=>{})}
 function closeCam(){$("#camv").classList.remove("on");if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}render()}
 $("#scanBig").onclick=openCam;$("#camX").onclick=closeCam;$("#camDone").onclick=closeCam;
 $("#cqm").onclick=()=>{CQ=Math.max(1,CQ-1);$("#cqv").textContent=CQ};$("#cqp").onclick=()=>{CQ++;$("#cqv").textContent=CQ};
@@ -267,7 +267,7 @@ async function setMode(w,digits){await w.setParameters(digits?{tessedit_pageseg_
 // AI reader: the photo goes to our small server (Google Apps Script) that asks Gemini for the selling price.
 // It knows to skip struck-through old prices, barcodes/article codes and price-per-kg. Fallback: on-phone OCR.
 const AI_URL="https://script.google.com/macros/s/AKfycbyAMTnkuJMT8jI1zVpEokhwIhf-6NqFexKICrMGbgijYp1PIzIR2AhIt9s5oleg8rxaag/exec";
-function jpeg(b){const k=Math.min(1,900/b.w),c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=Math.round(b.h*k);c.getContext("2d").drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.82).split(",")[1]}
+function jpeg(b){const k=Math.min(1,640/b.w),c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=Math.round(b.h*k);c.getContext("2d").drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.7).split(",")[1]}
 async function aiRead(b){if(!AI_URL)return null;const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),9000);
   try{const r=await fetch(AI_URL,{method:"POST",body:JSON.stringify({img:jpeg(b),lang:S.lang}),signal:ctl.signal});const j=await r.json();
     const v=parseFloat(String(j.price).replace(",","."));return v>0&&v<1e6?{v:Math.round(v*100)/100,name:(j.name||"").slice(0,30)}:(j.ok?{none:1}:null)}
@@ -293,12 +293,16 @@ async function cents(w,c,b){const n=b.int.length;await setMode(w,true);
     const s=document.createElement("canvas");s.width=cw*3;s.height=ch*3;s.getContext("2d").drawImage(c,x,y,cw,ch,0,0,s.width,s.height);
     const t=((await w.recognize(s)).data.text||"").replace(/\D/g,"");if(t.length>=2)return t.slice(-2)}
   return null}
-async function shoot(){const btn=$("#shut");if(btn.classList.contains("busy"))return;btn.classList.add("busy");vib();
-  try{const b=frameBox();const r=b?await readPrice(b):null;
-    if(r){S.items.push({p:r.v,q:CQ,n:r.name});last=S.items.length-1;save();ctot();ding();showRes(r.v*CQ,CQ,r.name);CQ=1;$("#cqv").textContent=1;try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
-    else showErr(T().closer)}
-  catch(e){showErr(T().offline)}
-  btn.classList.remove("busy")}
+// tap = instant snapshot; reading happens in the background so you can aim at the next price right away
+let pending=0;
+function snap(){const b=frameBox();if(!b)return null;const k=Math.min(1,1280/b.w),c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=Math.round(b.h*k);
+  c.getContext("2d").drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return {img:c,x:0,y:0,w:c.width,h:c.height}}
+function busy(){$("#shut").classList.toggle("busy",pending>0);if(pending>0){const r=$("#res");r.className="res on err";r.innerHTML=`<b>⏳ ${T().reading}${pending>1?" ("+pending+")":""}</b>`}}
+async function shoot(){const b=snap();if(!b)return;vib();const q=CQ;CQ=1;$("#cqv").textContent=1;pending++;busy();
+  let r=null,err=false;try{r=await readPrice(b)}catch(e){err=true}
+  pending--;busy();
+  if(r){S.items.push({p:r.v,q,n:r.name});last=S.items.length-1;save();ctot();ding();if(!pending)showRes(r.v*q,q,r.name);try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
+  else if(!pending)showErr(err?T().offline:T().closer)}
 $("#shut").onclick=shoot;
 function showRes(v,q,nm){const r=$("#res");r.className="res on";r.innerHTML=`<b class="n">+ ${money(v)}${nm?`<small>${esc(nm)}</small>`:""}</b><button id="rEdit">✏️</button><button id="rUndo">${T().undo}</button>`;
   $("#rUndo").onclick=()=>{if(last!=null){S.items.splice(last,1);last=null;save();ctot()}r.className="res"};
