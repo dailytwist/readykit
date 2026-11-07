@@ -264,12 +264,22 @@ function frameBox(){const v=$("#vid"),vw=v.videoWidth,vh=v.videoHeight;if(!vw)re
 function draw(b,hgt,inv){const k=hgt/b.h,c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=hgt;const g=c.getContext("2d");
   g.filter=inv?"grayscale(1) invert(1) contrast(1.6)":"grayscale(1) contrast(1.5)";g.drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c}
 async function setMode(w,digits){await w.setParameters(digits?{tessedit_pageseg_mode:"8",tessedit_char_whitelist:"0123456789"}:{tessedit_pageseg_mode:"11",tessedit_char_whitelist:""})}
-async function readPrice(b){const w=await getWorker();await setMode(w,false);
-  for(const [hgt,inv] of [[120,false],[120,true],[80,false],[80,true],[180,false]]){const c=draw(b,hgt,inv);const best=pick((await w.recognize(c)).data);
+// AI reader: the photo goes to our small server (Google Apps Script) that asks Gemini for the selling price.
+// It knows to skip struck-through old prices, barcodes/article codes and price-per-kg. Fallback: on-phone OCR.
+const AI_URL="";
+function jpeg(b){const k=Math.min(1,900/b.w),c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=Math.round(b.h*k);c.getContext("2d").drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.82).split(",")[1]}
+async function aiRead(b){if(!AI_URL)return null;const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),9000);
+  try{const r=await fetch(AI_URL,{method:"POST",body:JSON.stringify({img:jpeg(b),lang:S.lang}),signal:ctl.signal});const j=await r.json();
+    const v=parseFloat(String(j.price).replace(",","."));return v>0&&v<1e6?{v:Math.round(v*100)/100,name:(j.name||"").slice(0,30)}:(j.ok?{none:1}:null)}
+  catch(e){return null}finally{clearTimeout(to)}}
+async function readPrice(b){if(navigator.onLine!==false){const a=await aiRead(b);if(a&&a.v)return a;if(a&&a.none)return null}
+  const w=await getWorker();await setMode(w,false);
+  for(const [hgt,inv] of [[120,false],[120,true],[240,false],[240,true],[80,false],[360,false]]){const c=draw(b,hgt,inv);const best=pick((await w.recognize(c)).data);
     if(!best)continue;
     const name=nameFrom(best);
     if(best.dec)return {v:best.v,name};
     // whole number found: look for small raised cents just right of it (89⁹⁵ -> 89.95)
+    if(!best.sup)return {v:best.v,name};
     const ct=await cents(w,c,best);await setMode(w,false);return {v:ct!=null?parseFloat(best.int+"."+ct):best.v,name}}
   return null}
 // product name: the clearest line of words above the price (e.g. "LAIT DEMI-ECREME 1L")
@@ -300,11 +310,16 @@ $("#file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)
   $("#scanning").classList.remove("on")};
 function loadImg(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=URL.createObjectURL(f)})}
 // choose the price: the tallest number; "12,99"/"12.99" preferred; neighbouring digit pieces of the same size joined
-function pick(d){let ws=(d.words||[]).filter(w=>w.confidence==null||w.confidence>=45).map(w=>({t:(w.text.match(/\d[\d.,]*/)||[""])[0],h:w.bbox.y1-w.bbox.y0,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0})).filter(w=>/\d/.test(w.t)).sort((a,b)=>a.x0-b.x0);
+const CUR_RE=/^(dh|dhs|mad|eur|€|\$|usd|£|sar|aed|درهم|د\.م\.?)$/i;
+function pick(d){const all=(d.words||[]).filter(w=>w.confidence==null||w.confidence>=45);
+  let ws=all.map(w=>({raw:w.text,t:(w.text.match(/\d[\d.,]*/)||[""])[0],h:w.bbox.y1-w.bbox.y0,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,cur:/(dh|mad|€|\$|£|درهم)/i.test(w.text),sup:/\d[”"'°’`^]/.test(w.text)})).filter(w=>/\d/.test(w.t)).sort((a,b)=>a.x0-b.x0);
+  // a currency word right next to a number marks it as the price ("199 DH")
+  ws.forEach(w=>{if(all.some(o=>CUR_RE.test(o.text.trim())&&Math.abs(o.bbox.y0-w.y0)<w.h*.6&&o.bbox.x0>=w.x1-4&&o.bbox.x0-w.x1<w.h*1.5))w.cur=true});
   for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++){const a=ws[i],b=ws[j];if(Math.abs(a.h-b.h)<a.h*.2&&Math.abs(a.y0-b.y0)<a.h*.3&&b.x0-a.x1<a.h*.35&&b.x0>=a.x1-2){a.t+=b.t;a.x1=b.x1;ws.splice(j,1);j--}}
   let best=null;
   for(const w of ws){const t=w.t.replace(",",".").replace(/^\.+|\.+$/g,"");if(!/^\d{1,5}(\.\d{1,2})?$/.test(t))continue;const v=parseFloat(t);if(!(v>0&&v<1e5))continue;
-    const dec=t.includes("."),sc=w.h*(dec?1.5:1);if(!best||sc>best.s)best={v,s:sc,dec,int:t.split(".")[0],x0:w.x0,y0:w.y0,h:w.h}}
+    const dec=t.includes(".");let sc=w.h*(dec?1.5:1)*(w.cur?3:1);if(!dec&&!w.cur&&t.length>=4)sc*=.15; // 25234 = article code, not a price
+    if(!best||sc>best.s)best={v,s:sc,dec,int:t.split(".")[0],x0:w.x0,y0:w.y0,h:w.h,sup:w.sup}}
   if(best)best.words=d.words||[];return best}
 // ---------- sound: a short "ding" like the checkout scanner ----------
 let actx=null;function ding(){if(S.snd===false)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
