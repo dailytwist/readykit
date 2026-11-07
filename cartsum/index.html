@@ -220,13 +220,29 @@ async function openCam(){if(!(navigator.mediaDevices&&navigator.mediaDevices.get
 function closeCam(){$("#camv").classList.remove("on");if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}render()}
 $("#scanBig").onclick=openCam;$("#camX").onclick=closeCam;$("#camDone").onclick=closeCam;
 $("#cqm").onclick=()=>{CQ=Math.max(1,CQ-1);$("#cqv").textContent=CQ};$("#cqp").onclick=()=>{CQ++;$("#cqv").textContent=CQ};
-function grab(target){const v=$("#vid"),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return null;
-  // map the on-screen box (8%..92% wide, 30%..54% high, object-fit:cover) to video pixels
+// source frame: the part of the video inside the green box, or the whole photo
+let src=null;
+function frameBox(){const v=$("#vid"),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return null;
   const W=innerWidth,H=innerHeight,sc=Math.max(W/vw,H/vh),ox=(vw*sc-W)/2,oy=(vh*sc-H)/2;
-  const x=(W*.08+ox)/sc,y=(H*.30+oy)/sc,w=(W*.84)/sc,h=(H*.24)/sc;
-  const c=document.createElement("canvas"),k=Math.min(2,(target||120)/h);c.width=w*k;c.height=h*k;const g=c.getContext("2d");g.filter="grayscale(1) contrast(1.6)";g.drawImage(v,x,y,w,h,0,0,c.width,c.height);return c}
+  return {img:v,x:(W*.08+ox)/sc,y:(H*.30+oy)/sc,w:(W*.84)/sc,h:(H*.24)/sc}}
+// draw the source at a given height (Tesseract reads best when digits are ~40-60px), optionally inverted for white-on-red promo tags
+function draw(b,hgt,inv){const k=hgt/b.h,c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=hgt;const g=c.getContext("2d");
+  g.filter=inv?"grayscale(1) invert(1) contrast(1.6)":"grayscale(1) contrast(1.5)";g.drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c}
+async function setMode(w,digits){await w.setParameters(digits?{tessedit_pageseg_mode:"8",tessedit_char_whitelist:"0123456789"}:{tessedit_pageseg_mode:"11",tessedit_char_whitelist:""})}
+async function readPrice(b){const w=await getWorker();await setMode(w,false);
+  for(const [hgt,inv] of [[120,false],[120,true],[80,false],[80,true],[180,false]]){const c=draw(b,hgt,inv);const best=pick((await w.recognize(c)).data);
+    if(!best)continue;
+    if(best.dec)return best.v;
+    // whole number found: look for small raised cents just right of it (89⁹⁵ -> 89.95)
+    const ct=await cents(w,c,best);await setMode(w,false);return ct!=null?parseFloat(best.int+"."+ct):best.v}
+  return null}
+async function cents(w,c,b){const n=b.int.length;await setMode(w,true);
+  for(const k of [.6,.5]){const x=b.x0+n*k*b.h,y=Math.max(0,b.y0-b.h*.15),cw=Math.min(b.h,c.width-x),ch=b.h*.7;if(cw<8)continue;
+    const s=document.createElement("canvas");s.width=cw*3;s.height=ch*3;s.getContext("2d").drawImage(c,x,y,cw,ch,0,0,s.width,s.height);
+    const t=((await w.recognize(s)).data.text||"").replace(/\D/g,"");if(t.length>=2)return t.slice(-2)}
+  return null}
 async function shoot(){const btn=$("#shut");if(btn.classList.contains("busy"))return;btn.classList.add("busy");vib();
-  try{const w=await getWorker();let p=pick((await w.recognize(grab(120))).data);if(!p)p=pick((await w.recognize(grab(80))).data);
+  try{const b=frameBox();const p=b?await readPrice(b):null;
     if(p){S.items.push({p,q:CQ,n:""});last=S.items.length-1;save();ctot();showRes(p*CQ,CQ);CQ=1;$("#cqv").textContent=1;try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
     else showErr(T().closer)}
   catch(e){showErr(T().offline)}
@@ -236,19 +252,18 @@ function showRes(v,q){const r=$("#res");r.className="res on";r.innerHTML=`<b cla
   $("#rUndo").onclick=()=>{if(last!=null){S.items.splice(last,1);last=null;save();ctot()}r.className="res"};
   $("#rEdit").onclick=()=>{if(last!=null){const it=S.items.splice(last,1)[0];last=null;closeCam();$("#pr").value=it.p;Q=it.q;upd();$("#pr").focus()}}}
 function showErr(t){const r=$("#res");r.className="res on err";r.innerHTML=`<b>${t}</b>`}
-// photo fallback (no live camera allowed)
+// photo fallback (when the browser gives no live camera)
 $("#file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;$("#scanning").classList.add("on");
-  try{const w=await getWorker();const r=await w.recognize(await shrink(f));const p=pick(r.data);if(p){S.items.push({p,q:1,n:""});render();toast("+ "+money(p))}else toast(T().nofound)}catch(err){toast(T().offline)}
+  try{const im=await loadImg(f);const p=await readPrice({img:im,x:0,y:0,w:im.width,h:im.height});if(p){S.items.push({p,q:1,n:""});render();toast("+ "+money(p))}else toast(T().nofound)}catch(err){toast(T().offline)}
   $("#scanning").classList.remove("on")};
-function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;const x=c.getContext("2d");x.filter="grayscale(1) contrast(1.5)";x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c)};im.src=u})}
-// choose the price: the biggest number on the tag; "12,99" or "12.99" preferred; tiny superscript cents ("12" + small "99") joined
-function pick(d){let ws=(d.words||[]).map(w=>({t:(w.text.match(/\d[\d.,]*/)||[""])[0],h:w.bbox.y1-w.bbox.y0,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0})).filter(w=>/\d/.test(w.t)).sort((a,b)=>a.x0-b.x0);
-  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++){const a=ws[i],b=ws[j];if(b&&Math.abs(a.h-b.h)<a.h*.2&&Math.abs(a.y0-b.y0)<a.h*.3&&b.x0-a.x1<a.h*.35&&b.x0>=a.x1-2){a.t+=b.t;a.x1=b.x1;ws.splice(j,1);j--}}
+function loadImg(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=URL.createObjectURL(f)})}
+// choose the price: the tallest number; "12,99"/"12.99" preferred; neighbouring digit pieces of the same size joined
+function pick(d){let ws=(d.words||[]).filter(w=>w.confidence==null||w.confidence>=45).map(w=>({t:(w.text.match(/\d[\d.,]*/)||[""])[0],h:w.bbox.y1-w.bbox.y0,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0})).filter(w=>/\d/.test(w.t)).sort((a,b)=>a.x0-b.x0);
+  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++){const a=ws[i],b=ws[j];if(Math.abs(a.h-b.h)<a.h*.2&&Math.abs(a.y0-b.y0)<a.h*.3&&b.x0-a.x1<a.h*.35&&b.x0>=a.x1-2){a.t+=b.t;a.x1=b.x1;ws.splice(j,1);j--}}
   let best=null;
-  ws.forEach((w,i)=>{let t=w.t.replace(",",".").replace(/^\.+|\.+$/g,"");if(!/^\d{1,5}(\.\d{1,2})?$/.test(t))return;
-    if(!t.includes(".")){const nx=ws.find(o=>o!==w&&o.x0>=w.x1-4&&o.x0-w.x1<w.h&&/^\d{2}$/.test(o.t)&&o.h<w.h*.75&&o.y0<=w.y0+w.h*.4);if(nx)t=t+"."+nx.t}
-    const v=parseFloat(t);if(!(v>0&&v<1e5))return;const sc=w.h*(t.includes(".")?1.5:1);if(!best||sc>best.s)best={v,s:sc}});
-  return best?best.v:null}
+  for(const w of ws){const t=w.t.replace(",",".").replace(/^\.+|\.+$/g,"");if(!/^\d{1,5}(\.\d{1,2})?$/.test(t))continue;const v=parseFloat(t);if(!(v>0&&v<1e5))continue;
+    const dec=t.includes("."),sc=w.h*(dec?1.5:1);if(!best||sc>best.s)best={v,s:sc,dec,int:t.split(".")[0],x0:w.x0,y0:w.y0,h:w.h}}
+  return best}
 lang();render();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
