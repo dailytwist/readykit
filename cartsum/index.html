@@ -266,7 +266,7 @@ function draw(b,hgt,inv){const k=hgt/b.h,c=document.createElement("canvas");c.wi
 async function setMode(w,digits){await w.setParameters(digits?{tessedit_pageseg_mode:"8",tessedit_char_whitelist:"0123456789"}:{tessedit_pageseg_mode:"11",tessedit_char_whitelist:""})}
 // AI reader: the photo goes to our small server (Google Apps Script) that asks Gemini for the selling price.
 // It knows to skip struck-through old prices, barcodes/article codes and price-per-kg. Fallback: on-phone OCR.
-const AI_URL="";
+const AI_URL="https://script.google.com/macros/s/AKfycbyAMTnkuJMT8jI1zVpEokhwIhf-6NqFexKICrMGbgijYp1PIzIR2AhIt9s5oleg8rxaag/exec";
 function jpeg(b){const k=Math.min(1,900/b.w),c=document.createElement("canvas");c.width=Math.round(b.w*k);c.height=Math.round(b.h*k);c.getContext("2d").drawImage(b.img,b.x,b.y,b.w,b.h,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.82).split(",")[1]}
 async function aiRead(b){if(!AI_URL)return null;const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),9000);
   try{const r=await fetch(AI_URL,{method:"POST",body:JSON.stringify({img:jpeg(b),lang:S.lang}),signal:ctl.signal});const j=await r.json();
