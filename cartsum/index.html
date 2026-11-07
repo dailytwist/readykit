@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CartSum – Know your total before checkout</title>
+<meta name="description" content="Add each price as you shop and see your cart total before you reach the checkout. Free, no account, works offline.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f4f1;--card:#fff;--ink:#111;--mut:#7a7a74;--line:#e7e7e2;--acc:#c6f432;--dark:#111;--warn:#ffb020;--bad:#ff5a4f}
+@media (prefers-color-scheme:dark){:root{--bg:#0c0c0c;--card:#181818;--ink:#f2f2ee;--mut:#8d8d86;--line:#262626;--dark:#1d1d1d}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:500 15px/1.5 Inter,"Noto Kufi Arabic",Kufi,system-ui,sans-serif;padding:calc(10px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));max-width:520px;margin:auto}
+[dir=rtl] body{font-family:"Noto Kufi Arabic",Kufi,Inter,system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit;border:0;background:none;outline:none}
+button{cursor:pointer}
+.n{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+header{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 14px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:-.3px}
+.logo img{width:32px;height:32px;border-radius:10px}
+.pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600}
+/* total */
+.total{background:var(--dark);color:#fff;border-radius:28px;padding:20px 20px 18px;position:relative;overflow:hidden}
+.total:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:var(--acc);opacity:.13;top:-70px;inset-inline-end:-50px}
+.total small{color:#b9b9b2;font-size:13px;font-weight:600}
+.amt{font-size:52px;font-weight:800;letter-spacing:-1.5px;line-height:1.1;color:var(--acc);margin:4px 0 2px;word-break:break-all}
+.sub{display:flex;justify-content:space-between;align-items:center;color:#b9b9b2;font-size:13px}
+.budbtn{color:#fff;background:#ffffff1a;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600}
+.bar{height:8px;border-radius:8px;background:#ffffff1f;margin-top:12px;overflow:hidden;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--acc);border-radius:8px;transition:width .35s,background .3s}
+.total.has .bar{display:block}
+.total.warn .bar i{background:var(--warn)}.total.over .bar i{background:var(--bad)}.total.over .amt{color:#ff8a80}
+/* add */
+.add{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:14px;margin-top:12px;box-shadow:0 14px 30px -24px #0005}
+.row{display:flex;gap:8px;align-items:stretch}
+.price{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:16px;padding:0 14px;border:2px solid transparent;transition:border .2s}
+.price:focus-within{border-color:var(--ink)}
+.price input{flex:1;min-width:0;width:100%;height:58px;font-size:28px;font-weight:700;direction:ltr}
+.price input::placeholder{color:#b5b5ae;font-weight:600}
+.price .cur{color:var(--mut);font-weight:700;font-size:15px}
+.cam{width:58px;border-radius:16px;background:var(--bg);font-size:22px;display:grid;place-items:center}
+.row2{display:flex;gap:8px;margin-top:8px}
+.name{flex:1;min-width:0;background:var(--bg);border-radius:14px;padding:0 12px;height:46px;font-size:14.5px}
+.qty{display:flex;align-items:center;background:var(--bg);border-radius:14px;direction:ltr}
+.qty button{width:40px;height:46px;font-size:20px;font-weight:700}
+.qty span{min-width:22px;text-align:center;font-weight:700}
+.go{width:100%;height:58px;margin-top:10px;border-radius:18px;background:var(--acc);color:#111;font-size:18px;font-weight:800;transition:transform .1s,opacity .2s}
+.go:active{transform:scale(.98)}.go:disabled{opacity:.45}
+/* scan */
+.scanbig{width:100%;margin-top:12px;border-radius:24px;background:var(--acc);color:#111;padding:18px;display:flex;align-items:center;gap:14px;text-align:start;box-shadow:0 16px 30px -18px #8fb51f}
+.scanbig .ic{width:58px;height:58px;border-radius:18px;background:#111;color:var(--acc);display:grid;place-items:center;font-size:28px;flex:none}
+.scanbig b{display:block;font-size:20px;font-weight:800}.scanbig small{display:block;font-size:13px;opacity:.75}
+.or{text-align:center;color:var(--mut);font-size:12.5px;font-weight:600;margin:12px 0 -4px}
+.camv{position:fixed;inset:0;background:#000;z-index:40;display:none}.camv.on{display:block}
+.camv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame{position:absolute;left:8%;right:8%;top:30%;height:24%;border-radius:22px;box-shadow:0 0 0 9999px #000a;border:3px solid var(--acc)}
+.frame:after{content:"";position:absolute;left:10px;right:10px;top:50%;height:2px;background:var(--acc);opacity:.6;animation:sc 1.6s ease-in-out infinite alternate}@keyframes sc{from{top:12%}to{top:88%}}
+.ctop{position:absolute;top:calc(14px + env(safe-area-inset-top));left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.ctop button{width:44px;height:44px;border-radius:14px;background:#ffffff26;font-size:20px;color:#fff}
+.ctot{text-align:end}.ctot small{display:block;font-size:12px;opacity:.8}.ctot b{font-size:30px;font-weight:800;color:var(--acc)}
+.hint{position:absolute;top:calc(30% - 44px);left:0;right:0;text-align:center;color:#fff;font-size:14px;font-weight:600}
+.res{position:absolute;left:14px;right:14px;top:calc(54% + 16px);background:#fff;color:#111;border-radius:20px;padding:12px 14px;display:none;align-items:center;gap:10px;animation:in .2s ease}
+.res.on{display:flex}.res b{flex:1;font-size:22px;font-weight:800}.res button{background:#f0f0ec;border-radius:12px;padding:8px 12px;font-weight:700;font-size:13.5px}
+.res.err b{font-size:15px;font-weight:600}
+.cbot{position:absolute;bottom:calc(26px + env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:space-around;align-items:center}
+.cbot .qty{background:#ffffff26;color:#fff;border-radius:14px}
+.shut{width:84px;height:84px;border-radius:50%;background:var(--acc);border:6px solid #fff;box-shadow:0 0 0 3px var(--acc)}
+.shut:active{transform:scale(.94)}.shut.busy{opacity:.5;animation:pl 1s infinite}@keyframes pl{50%{transform:scale(.92)}}
+.cdone{color:#fff;background:#ffffff26;border-radius:14px;padding:12px 16px;font-weight:700}
+/* how */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.how div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 10px;font-size:12.5px;color:var(--mut);line-height:1.4}
+.how b{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;background:var(--acc);color:#111;font-size:13px;margin-bottom:6px}
+/* list */
+.lh{display:flex;justify-content:space-between;align-items:center;margin:18px 4px 8px;font-weight:700}
+.lh button{font-size:13px;color:var(--mut);font-weight:600}
+.it{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 12px;margin-bottom:8px;animation:in .22s ease}
+@keyframes in{from{opacity:0;transform:translateY(-6px)}}
+.it .tx{flex:1;min-width:0}.it .tx b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.it .tx small{color:var(--mut);font-size:12.5px}
+.it .qty{background:var(--bg);border-radius:12px}.it .qty button{width:32px;height:34px;font-size:17px}
+.it .p{font-weight:800;font-size:16px;min-width:70px;text-align:end}
+.done{width:100%;height:52px;border-radius:18px;background:var(--dark);color:#fff;font-weight:700;margin-top:6px}
+.hist{margin-top:18px;color:var(--mut);font-size:13px;text-align:center}
+/* sheet */
+.mask{position:fixed;inset:0;background:#0008;opacity:0;pointer-events:none;transition:.25s;z-index:9}.mask.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;inset-inline:0;bottom:0;max-width:520px;margin:auto;background:var(--card);border-radius:26px 26px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:10}
+.sheet.on{transform:none}
+.sheet h3{font-size:18px;font-weight:800;margin-bottom:10px}
+.f{display:block;margin-bottom:10px}.f span{display:block;font-size:13px;color:var(--mut);margin-bottom:4px;font-weight:600}
+.f input,.f select{width:100%;height:50px;background:var(--bg);border-radius:14px;padding:0 12px;font-size:16px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;z-index:20;transition:.3s;white-space:nowrap;opacity:0;pointer-events:none}
+.toast.on{transform:translate(-50%,0);opacity:1}
+.scan{position:fixed;inset:0;background:#000c;color:#fff;display:none;place-items:center;z-index:30;text-align:center}.scan.on{display:grid}
+.spin{width:42px;height:42px;border:4px solid #fff3;border-top-color:var(--acc);border-radius:50%;margin:0 auto 12px;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="icon.svg" alt="">CartSum</div>
+  <button class="pill" id="setBtn"><span id="langLbl">EN</span> · <span id="curLbl">USD</span> ▾</button>
+</header>
+
+<section class="total" id="tot">
+  <small data-t="total">Cart total</small>
+  <div class="amt n" id="amt">0.00</div>
+  <div class="sub"><span id="cnt">0 items</span><button class="budbtn" id="budBtn">🎯 <span id="budTxt">Set a budget</span></button></div>
+  <div class="bar"><i id="barI"></i></div>
+</section>
+
+<button class="scanbig" id="scanBig"><span class="ic">📷</span><span><b data-t="scan">Scan prices</b><small data-t="scansub">Point at the price tag – it adds itself</small></span></button>
+<p class="or" data-t="or">or type the price</p>
+<section class="add">
+  <div class="row">
+    <label class="price"><input id="pr" inputmode="decimal" autocomplete="off" placeholder="0.00" enterkeyhint="done"><span class="cur n" id="curSym">$</span></label>
+  </div>
+  <div class="row2">
+    <input class="name" id="nm" data-ph="name" placeholder="Item name (optional)" enterkeyhint="done">
+    <div class="qty"><button id="qm">−</button><span id="qv">1</span><button id="qp">+</button></div>
+  </div>
+  <button class="go" id="addBtn" disabled data-t="add">Add to cart</button>
+</section>
+
+<section class="how" id="how">
+  <div><b>1</b><span data-t="h1">Tap “Scan prices”</span></div>
+  <div><b>2</b><span data-t="h2">Point at the price tag and tap</span></div>
+  <div><b>3</b><span data-t="h3">Your total adds up by itself</span></div>
+</section>
+
+<div id="listWrap" hidden>
+  <div class="lh"><span data-t="incart">In your cart</span><button id="clr" data-t="clear">Clear</button></div>
+  <div id="list"></div>
+  <button class="done" id="doneBtn" data-t="done">✓ Paid – start a new cart</button>
+</div>
+<p class="hist" id="hist"></p>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet">
+  <h3 data-t="settings">Settings</h3>
+  <label class="f"><span data-t="lang">Language</span><select id="sLang"></select></label>
+  <label class="f"><span data-t="cur">Currency</span><select id="sCur"></select></label>
+  <label class="f"><span data-t="budget">Budget for this trip (optional)</span><input id="sBud" inputmode="decimal" placeholder="0"></label>
+  <button class="go" id="sSave" data-t="save">Save</button>
+</div>
+<div class="camv" id="camv"><video id="vid" playsinline muted autoplay></video><div class="frame"></div><p class="hint" data-t="aim">Put the price inside the box</p>
+  <div class="ctop"><button id="camX" aria-label="Close">✕</button><div class="ctot"><small data-t="total">Cart total</small><b class="n" id="ctot">0</b></div></div>
+  <div class="res" id="res"></div>
+  <div class="cbot"><div class="qty"><button id="cqm">−</button><span id="cqv">1</span><button id="cqp">+</button></div><button class="shut" id="shut" aria-label="Scan"></button><button class="cdone" id="camDone" data-t="finish">Done</button></div></div>
+<input type="file" id="file" accept="image/*" capture="environment" hidden>
+<div class="scan" id="scanning"><div><div class="spin"></div><span data-t="reading">Reading the price…</span></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const L={
+en:{h1:"Tap “Scan prices”",h2:"Point at the price tag and tap",h3:"Your total adds up by itself",scan:"Scan prices",scansub:"Point at the price tag – it adds itself",or:"or type the price",aim:"Put the price inside the box",finish:"Done",undo:"Undo",closer:"Couldn't read it – move closer and try again",name:"English",total:"Cart total",items:n=>n==1?"1 item":n+" items",setb:"Set a budget",left:"left",over:"over budget",add:"Add to cart",addp:p=>"Add "+p,incart:"In your cart",clear:"Clear",done:"✓ Paid – start a new cart",settings:"Settings",lang:"Language",cur:"Currency",budget:"Budget for this trip (optional)",save:"Save",nameph:"Item name (optional)",item:"Item",added:"Added ✓",near:"Almost at your budget",overT:"Over budget!",cleared:"Cart cleared",again:"Tap again to clear",saved:"Saved ✓",month:t=>"This month: "+t,reading:"Reading the price…",found:"Price found – check it",nofound:"Couldn't read it – type the price",offline:"Scanning needs internet – type the price",paid:t=>"Saved "+t+" ✓"},
+fr:{h1:"Appuyez sur « Scanner »",h2:"Visez l’étiquette et appuyez",h3:"Le total se calcule tout seul",scan:"Scanner les prix",scansub:"Visez l’étiquette – le prix s’ajoute tout seul",or:"ou tapez le prix",aim:"Placez le prix dans le cadre",finish:"Terminé",undo:"Annuler",closer:"Illisible – approchez-vous et réessayez",name:"Français",total:"Total du panier",items:n=>n<=1?n+" article":n+" articles",setb:"Fixer un budget",left:"restant",over:"au-dessus",add:"Ajouter au panier",addp:p=>"Ajouter "+p,incart:"Dans votre panier",clear:"Vider",done:"✓ Payé – nouveau panier",settings:"Réglages",lang:"Langue",cur:"Devise",budget:"Budget pour ces courses (facultatif)",save:"Enregistrer",nameph:"Nom de l’article (facultatif)",item:"Article",added:"Ajouté ✓",near:"Budget presque atteint",overT:"Budget dépassé !",cleared:"Panier vidé",again:"Appuyez encore pour vider",saved:"Enregistré ✓",month:t=>"Ce mois-ci : "+t,reading:"Lecture du prix…",found:"Prix trouvé – vérifiez-le",nofound:"Illisible – tapez le prix",offline:"Le scan nécessite Internet – tapez le prix",paid:t=>t+" enregistré ✓"},
+es:{h1:"Toca “Escanear”",h2:"Apunta a la etiqueta y toca",h3:"El total se suma solo",scan:"Escanear precios",scansub:"Apunta a la etiqueta – se suma solo",or:"o escribe el precio",aim:"Pon el precio dentro del recuadro",finish:"Listo",undo:"Deshacer",closer:"No se pudo leer – acércate e inténtalo otra vez",name:"Español",total:"Total del carrito",items:n=>n==1?"1 producto":n+" productos",setb:"Poner presupuesto",left:"restante",over:"de más",add:"Añadir al carrito",addp:p=>"Añadir "+p,incart:"En tu carrito",clear:"Vaciar",done:"✓ Pagado – nuevo carrito",settings:"Ajustes",lang:"Idioma",cur:"Moneda",budget:"Presupuesto de esta compra (opcional)",save:"Guardar",nameph:"Nombre del producto (opcional)",item:"Producto",added:"Añadido ✓",near:"Casi en tu presupuesto",overT:"¡Te pasaste del presupuesto!",cleared:"Carrito vacío",again:"Toca otra vez para vaciar",saved:"Guardado ✓",month:t=>"Este mes: "+t,reading:"Leyendo el precio…",found:"Precio encontrado – revísalo",nofound:"No se pudo leer – escribe el precio",offline:"El escaneo necesita internet",paid:t=>t+" guardado ✓"},
+ar:{h1:"اضغط «امسح الأسعار»",h2:"وجّه الكاميرا للسعر واضغط",h3:"المجموع يُحسب وحده",scan:"امسح الأسعار",scansub:"وجّه الكاميرا للسعر – يُضاف وحده",or:"أو اكتب السعر",aim:"ضع السعر داخل الإطار",finish:"تم",undo:"تراجع",closer:"لم نستطع القراءة – اقترب وحاول مرة أخرى",name:"العربية",total:"مجموع السلة",items:n=>n+" منتج",setb:"حدد ميزانية",left:"متبقي",over:"تجاوزت",add:"أضف إلى السلة",addp:p=>"أضف "+p,incart:"في سلتك",clear:"إفراغ",done:"✓ دفعت – سلة جديدة",settings:"الإعدادات",lang:"اللغة",cur:"العملة",budget:"ميزانية هذا التسوق (اختياري)",save:"حفظ",nameph:"اسم المنتج (اختياري)",item:"منتج",added:"تمت الإضافة ✓",near:"اقتربت من ميزانيتك",overT:"تجاوزت الميزانية!",cleared:"تم إفراغ السلة",again:"اضغط مرة أخرى للإفراغ",saved:"تم الحفظ ✓",month:t=>"هذا الشهر: "+t,reading:"جاري قراءة السعر…",found:"وجدنا السعر – تأكد منه",nofound:"لم نستطع القراءة – اكتب السعر",offline:"المسح يحتاج الإنترنت – اكتب السعر",paid:t=>"تم حفظ "+t+" ✓"},
+pt:{h1:"Toque em “Escanear”",h2:"Aponte para a etiqueta e toque",h3:"O total soma sozinho",scan:"Escanear preços",scansub:"Aponte para a etiqueta – soma sozinho",or:"ou digite o preço",aim:"Coloque o preço dentro do quadro",finish:"Pronto",undo:"Desfazer",closer:"Não deu para ler – aproxime e tente de novo",name:"Português",total:"Total do carrinho",items:n=>n==1?"1 item":n+" itens",setb:"Definir orçamento",left:"restante",over:"acima",add:"Adicionar",addp:p=>"Adicionar "+p,incart:"No seu carrinho",clear:"Limpar",done:"✓ Pago – novo carrinho",settings:"Configurações",lang:"Idioma",cur:"Moeda",budget:"Orçamento desta compra (opcional)",save:"Salvar",nameph:"Nome do item (opcional)",item:"Item",added:"Adicionado ✓",near:"Quase no orçamento",overT:"Orçamento estourado!",cleared:"Carrinho limpo",again:"Toque de novo para limpar",saved:"Salvo ✓",month:t=>"Este mês: "+t,reading:"Lendo o preço…",found:"Preço encontrado – confira",nofound:"Não deu para ler – digite o preço",offline:"A leitura precisa de internet",paid:t=>t+" salvo ✓"},
+de:{h1:"„Preise scannen“ tippen",h2:"Auf das Preisschild halten und tippen",h3:"Die Summe rechnet sich selbst",scan:"Preise scannen",scansub:"Auf das Preisschild halten – wird automatisch addiert",or:"oder Preis eintippen",aim:"Preis in den Rahmen halten",finish:"Fertig",undo:"Rückgängig",closer:"Nicht lesbar – näher ran und nochmal",name:"Deutsch",total:"Warenkorb gesamt",items:n=>n==1?"1 Artikel":n+" Artikel",setb:"Budget festlegen",left:"übrig",over:"drüber",add:"In den Warenkorb",addp:p=>p+" hinzufügen",incart:"Im Warenkorb",clear:"Leeren",done:"✓ Bezahlt – neuer Einkauf",settings:"Einstellungen",lang:"Sprache",cur:"Währung",budget:"Budget für diesen Einkauf (optional)",save:"Speichern",nameph:"Artikelname (optional)",item:"Artikel",added:"Hinzugefügt ✓",near:"Budget fast erreicht",overT:"Budget überschritten!",cleared:"Warenkorb geleert",again:"Nochmal tippen zum Leeren",saved:"Gespeichert ✓",month:t=>"Diesen Monat: "+t,reading:"Preis wird gelesen…",found:"Preis gefunden – bitte prüfen",nofound:"Nicht lesbar – Preis eintippen",offline:"Scannen braucht Internet",paid:t=>t+" gespeichert ✓"}};
+const CUR=["USD","EUR","GBP","MAD","SAR","AED","EGP","DZD","TND","QAR","KWD","CAD","AUD","BRL","MXN","TRY","INR","JPY","CHF"];
+const REG={US:"USD",GB:"GBP",MA:"MAD",SA:"SAR",AE:"AED",EG:"EGP",DZ:"DZD",TN:"TND",QA:"QAR",KW:"KWD",CA:"CAD",AU:"AUD",BR:"BRL",MX:"MXN",TR:"TRY",IN:"INR",JP:"JPY",CH:"CHF"};
+const EU="AT BE CY DE EE ES FI FR GR HR IE IT LT LU LV MT NL PT SI SK".split(" ");
+const store={get(k,d){try{const v=localStorage.getItem("cs_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("cs_"+k,JSON.stringify(v))}catch(e){}}};
+const nav=(navigator.languages&&navigator.languages[0])||navigator.language||"en";
+const reg=(nav.split("-")[1]||"").toUpperCase();
+let S=store.get("s",null)||{lang:L[nav.slice(0,2)]?nav.slice(0,2):"en",cur:REG[reg]||(EU.includes(reg)?"EUR":"USD"),items:[],budget:0,hist:[]};
+const save=()=>store.set("s",S);
+const T=()=>L[S.lang];
+const money=v=>{try{return new Intl.NumberFormat(S.lang==="ar"?"ar-MA-u-nu-latn":S.lang,{style:"currency",currency:S.cur,maximumFractionDigits:S.cur==="JPY"?0:2}).format(v)}catch(e){return v.toFixed(2)+" "+S.cur}};
+const sym=()=>{try{return new Intl.NumberFormat(S.lang==="ar"?"ar-MA-u-nu-latn":S.lang,{style:"currency",currency:S.cur}).formatToParts(0).find(p=>p.type==="currency").value}catch(e){return S.cur}};
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const vib=()=>{try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}};
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1700)}
+let Q=1;
+const total=()=>S.items.reduce((a,i)=>a+i.p*i.q,0);
+function lang(){const t=T();document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==="ar"?"rtl":"ltr";
+  $$("[data-t]").forEach(e=>{const v=t[e.dataset.t];if(typeof v==="string")e.textContent=v});$("#nm").placeholder=t.nameph;$("#langLbl").textContent=S.lang.toUpperCase();$("#curLbl").textContent=S.cur;$("#curSym").textContent=sym()}
+function render(){const t=T(),tot=total(),n=S.items.reduce((a,i)=>a+i.q,0);
+  $("#amt").textContent=money(tot);$("#cnt").textContent=t.items(n);
+  const box=$("#tot");box.classList.toggle("has",S.budget>0);
+  if(S.budget>0){const r=tot/S.budget;box.classList.toggle("warn",r>=.85&&r<=1);box.classList.toggle("over",r>1);$("#barI").style.width=Math.min(100,r*100)+"%";
+    $("#budTxt").textContent=money(Math.abs(S.budget-tot))+" "+(r>1?t.over:t.left)}else{box.classList.remove("warn","over");$("#budTxt").textContent=t.setb}
+  $("#listWrap").hidden=!S.items.length;$("#how").style.display=S.items.length?"none":"";
+  $("#list").innerHTML=S.items.map((i,k)=>`<div class="it"><div class="tx"><b>${esc(i.n)||t.item+" "+(k+1)}</b><small class="n">${money(i.p)}${i.q>1?" × "+i.q:""}</small></div><div class="qty"><button data-k="${k}" data-d="-1">−</button><span>${i.q}</span><button data-k="${k}" data-d="1">+</button></div><b class="p n">${money(i.p*i.q)}</b></div>`).reverse().join("");
+  const now=new Date(),m=S.hist.filter(h=>{const d=new Date(h.d);return d.getMonth()==now.getMonth()&&d.getFullYear()==now.getFullYear()&&h.c===S.cur}).reduce((a,h)=>a+h.t,0);
+  $("#hist").textContent=m>0?t.month(money(m)):"";upd();save()}
+function val(){return parseFloat(($("#pr").value||"").replace(",","."))}
+function upd(){const v=val();const ok=v>0&&v<1e7;$("#addBtn").disabled=!ok;$("#addBtn").textContent=ok?T().addp(money(v*Q)):T().add;$("#qv").textContent=Q}
+$("#pr").oninput=upd;
+$("#qm").onclick=()=>{Q=Math.max(1,Q-1);upd()};$("#qp").onclick=()=>{Q++;upd()};
+function add(){const v=val();if(!(v>0))return;S.items.push({p:Math.round(v*100)/100,q:Q,n:$("#nm").value.trim()});$("#pr").value="";$("#nm").value="";Q=1;vib();render();
+  const r=S.budget?total()/S.budget:0;toast(r>1?T().overT:r>=.85?T().near:T().added);$("#pr").focus()}
+$("#addBtn").onclick=add;$("#pr").onkeydown=e=>{if(e.key==="Enter")add()};$("#nm").onkeydown=e=>{if(e.key==="Enter")add()};
+$("#list").onclick=e=>{const b=e.target.closest("button[data-k]");if(!b)return;const k=+b.dataset.k;S.items[k].q+=+b.dataset.d;if(S.items[k].q<=0)S.items.splice(k,1);vib();render()};
+let c0=0;$("#clr").onclick=()=>{if(Date.now()-c0<3000){S.items=[];c0=0;render();toast(T().cleared)}else{c0=Date.now();toast(T().again)}};
+$("#doneBtn").onclick=()=>{const tt=total();S.hist.push({d:Date.now(),t:tt,c:S.cur});S.hist=S.hist.slice(-200);S.items=[];render();toast(T().paid(money(tt)))};
+// settings
+$("#sLang").innerHTML=Object.entries(L).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("");
+$("#sCur").innerHTML=CUR.map(c=>`<option>${c}</option>`).join("");
+function openSet(){$("#sLang").value=S.lang;$("#sCur").value=S.cur;$("#sBud").value=S.budget||"";$("#sheet").classList.add("on");$("#mask").classList.add("on")}
+const close=()=>{$("#sheet").classList.remove("on");$("#mask").classList.remove("on")};
+$("#setBtn").onclick=openSet;$("#budBtn").onclick=openSet;$("#mask").onclick=close;
+$("#sSave").onclick=()=>{S.lang=$("#sLang").value;S.cur=$("#sCur").value;S.budget=parseFloat(($("#sBud").value||"").replace(",","."))||0;close();lang();render();toast(T().saved)};
+// ---------- price scanner: live camera + OCR (Tesseract), tap and it adds itself ----------
+let worker=null,stream=null,CQ=1,last=null;
+const loadT=()=>window.Tesseract?Promise.resolve(window.Tesseract):new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=()=>ok(window.Tesseract);s.onerror=no;document.head.appendChild(s)});
+async function getWorker(){if(worker)return worker;const Ts=await loadT();worker=await Ts.createWorker("eng");await worker.setParameters({tessedit_pageseg_mode:"11"});return worker}
+function ctot(){$("#ctot").textContent=money(total())}
+async function openCam(){if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return $("#file").click();
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false})}catch(e){return $("#file").click()}
+  const v=$("#vid");v.srcObject=stream;await v.play().catch(()=>{});CQ=1;$("#cqv").textContent=1;$("#res").className="res";ctot();$("#camv").classList.add("on");getWorker().catch(()=>{})}
+function closeCam(){$("#camv").classList.remove("on");if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}render()}
+$("#scanBig").onclick=openCam;$("#camX").onclick=closeCam;$("#camDone").onclick=closeCam;
+$("#cqm").onclick=()=>{CQ=Math.max(1,CQ-1);$("#cqv").textContent=CQ};$("#cqp").onclick=()=>{CQ++;$("#cqv").textContent=CQ};
+function grab(target){const v=$("#vid"),vw=v.videoWidth,vh=v.videoHeight;if(!vw)return null;
+  // map the on-screen box (8%..92% wide, 30%..54% high, object-fit:cover) to video pixels
+  const W=innerWidth,H=innerHeight,sc=Math.max(W/vw,H/vh),ox=(vw*sc-W)/2,oy=(vh*sc-H)/2;
+  const x=(W*.08+ox)/sc,y=(H*.30+oy)/sc,w=(W*.84)/sc,h=(H*.24)/sc;
+  const c=document.createElement("canvas"),k=Math.min(2,(target||120)/h);c.width=w*k;c.height=h*k;const g=c.getContext("2d");g.filter="grayscale(1) contrast(1.6)";g.drawImage(v,x,y,w,h,0,0,c.width,c.height);return c}
+async function shoot(){const btn=$("#shut");if(btn.classList.contains("busy"))return;btn.classList.add("busy");vib();
+  try{const w=await getWorker();let p=pick((await w.recognize(grab(120))).data);if(!p)p=pick((await w.recognize(grab(80))).data);
+    if(p){S.items.push({p,q:CQ,n:""});last=S.items.length-1;save();ctot();showRes(p*CQ,CQ);CQ=1;$("#cqv").textContent=1;try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
+    else showErr(T().closer)}
+  catch(e){showErr(T().offline)}
+  btn.classList.remove("busy")}
+$("#shut").onclick=shoot;
+function showRes(v,q){const r=$("#res");r.className="res on";r.innerHTML=`<b class="n">+ ${money(v)}</b><button id="rEdit">✏️</button><button id="rUndo">${T().undo}</button>`;
+  $("#rUndo").onclick=()=>{if(last!=null){S.items.splice(last,1);last=null;save();ctot()}r.className="res"};
+  $("#rEdit").onclick=()=>{if(last!=null){const it=S.items.splice(last,1)[0];last=null;closeCam();$("#pr").value=it.p;Q=it.q;upd();$("#pr").focus()}}}
+function showErr(t){const r=$("#res");r.className="res on err";r.innerHTML=`<b>${t}</b>`}
+// photo fallback (no live camera allowed)
+$("#file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;$("#scanning").classList.add("on");
+  try{const w=await getWorker();const r=await w.recognize(await shrink(f));const p=pick(r.data);if(p){S.items.push({p,q:1,n:""});render();toast("+ "+money(p))}else toast(T().nofound)}catch(err){toast(T().offline)}
+  $("#scanning").classList.remove("on")};
+function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;const x=c.getContext("2d");x.filter="grayscale(1) contrast(1.5)";x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c)};im.src=u})}
+// choose the price: the biggest number on the tag; "12,99" or "12.99" preferred; tiny superscript cents ("12" + small "99") joined
+function pick(d){let ws=(d.words||[]).map(w=>({t:(w.text.match(/\d[\d.,]*/)||[""])[0],h:w.bbox.y1-w.bbox.y0,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0})).filter(w=>/\d/.test(w.t)).sort((a,b)=>a.x0-b.x0);
+  for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++){const a=ws[i],b=ws[j];if(b&&Math.abs(a.h-b.h)<a.h*.2&&Math.abs(a.y0-b.y0)<a.h*.3&&b.x0-a.x1<a.h*.35&&b.x0>=a.x1-2){a.t+=b.t;a.x1=b.x1;ws.splice(j,1);j--}}
+  let best=null;
+  ws.forEach((w,i)=>{let t=w.t.replace(",",".").replace(/^\.+|\.+$/g,"");if(!/^\d{1,5}(\.\d{1,2})?$/.test(t))return;
+    if(!t.includes(".")){const nx=ws.find(o=>o!==w&&o.x0>=w.x1-4&&o.x0-w.x1<w.h&&/^\d{2}$/.test(o.t)&&o.h<w.h*.75&&o.y0<=w.y0+w.h*.4);if(nx)t=t+"."+nx.t}
+    const v=parseFloat(t);if(!(v>0&&v<1e5))return;const sc=w.h*(t.includes(".")?1.5:1);if(!best||sc>best.s)best={v,s:sc}});
+  return best?best.v:null}
+lang();render();
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
