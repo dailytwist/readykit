@@ -74,6 +74,22 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
 .shut{width:84px;height:84px;border-radius:50%;background:var(--acc);border:6px solid #fff;box-shadow:0 0 0 3px var(--acc)}
 .shut:active{transform:scale(.94)}.shut.busy{opacity:.5;animation:pl 1s infinite}@keyframes pl{50%{transform:scale(.92)}}
 .cdone{color:#fff;background:#ffffff26;border-radius:14px;padding:12px 16px;font-weight:700}
+.hb{display:flex;gap:6px}.hb .ib{width:40px;height:38px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:17px;display:grid;place-items:center;position:relative}
+.hb .ib i{position:absolute;top:-4px;inset-inline-end:-4px;background:var(--acc);color:#111;font:800 10px/16px Inter;min-width:16px;height:16px;border-radius:8px;font-style:normal;text-align:center;padding:0 3px}
+.mic{width:58px;border-radius:16px;background:var(--bg);font-size:22px;display:grid;place-items:center;flex:none}.mic.on{background:var(--bad);color:#fff;animation:pl 1s infinite}
+.sheet .x{position:absolute;top:12px;inset-inline-end:14px;width:36px;height:36px;border-radius:12px;background:var(--bg);font-size:16px}
+.li{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line)}.li b{flex:1;font-weight:600}.li.d b{text-decoration:line-through;color:var(--mut)}
+.li .bx{width:24px;height:24px;border-radius:8px;border:2px solid var(--ink);display:grid;place-items:center;font-size:13px;flex:none}.li.d .bx{background:var(--acc);border-color:var(--acc);color:#111}
+.li button.del{color:var(--mut);padding:4px 8px}
+.lst{max-height:42vh;overflow:auto;margin:6px 0 10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc{background:var(--bg);border-radius:18px;padding:12px;border:2px solid transparent}.pc.win{border-color:var(--acc);background:#c6f43222}
+.pc h4{font-size:14px;margin-bottom:6px}.pc input,.pc select{width:100%;height:44px;background:var(--card);border-radius:12px;padding:0 10px;margin-bottom:6px;font-size:15px;border:1px solid var(--line)}
+.pc .u{font-size:12.5px;color:var(--mut);min-height:20px}
+.verdict{text-align:center;font-weight:800;font-size:16px;margin:12px 0 4px;min-height:24px}
+.sw{display:flex;justify-content:space-between;align-items:center;margin:4px 0 12px;font-weight:600}
+.sw input{width:48px;height:28px;accent-color:#111}
+.res small{display:block;font-size:12px;color:#666;font-weight:600}
 /* how */
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .how div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 10px;font-size:12.5px;color:var(--mut);line-height:1.4}
@@ -95,7 +111,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
 .sheet h3{font-size:18px;font-weight:800;margin-bottom:10px}
 .f{display:block;margin-bottom:10px}.f span{display:block;font-size:13px;color:var(--mut);margin-bottom:4px;font-weight:600}
 .f input,.f select{width:100%;height:50px;background:var(--bg);border-radius:14px;padding:0 12px;font-size:16px}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;z-index:20;transition:.3s;white-space:nowrap;opacity:0;pointer-events:none}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;z-index:20;transition:.3s;white-space:nowrap;opacity:0;pointer-events:none}
 .toast.on{transform:translate(-50%,0);opacity:1}
 .scan{position:fixed;inset:0;background:#000c;color:#fff;display:none;place-items:center;z-index:30;text-align:center}.scan.on{display:grid}
 .spin{width:42px;height:42px;border:4px solid #fff3;border-top-color:var(--acc);border-radius:50%;margin:0 auto 12px;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
@@ -104,7 +120,8 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
 <body>
 <header>
   <div class="logo"><img src="icon.svg" alt="">CartSum</div>
-  <button class="pill" id="setBtn"><span id="langLbl">EN</span> · <span id="curLbl">USD</span> ▾</button>
+  <div class="hb"><button class="ib" id="listBtn" aria-label="List">📝<i id="listN" hidden>0</i></button><button class="ib" id="cmpBtn" aria-label="Compare">⚖️</button>
+  <button class="pill" id="setBtn"><span id="langLbl">EN</span> · <span id="curLbl">USD</span> ▾</button></div>
 </header>
 
 <section class="total" id="tot">
@@ -119,9 +136,10 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
 <section class="add">
   <div class="row">
     <label class="price"><input id="pr" inputmode="decimal" autocomplete="off" placeholder="0.00" enterkeyhint="done"><span class="cur n" id="curSym">$</span></label>
+    <button class="mic" id="micBtn" aria-label="Voice">🎤</button>
   </div>
   <div class="row2">
-    <input class="name" id="nm" data-ph="name" placeholder="Item name (optional)" enterkeyhint="done">
+    <input class="name" id="nm" data-ph="nameph" placeholder="Item name (optional)" enterkeyhint="done">
     <div class="qty"><button id="qm">−</button><span id="qv">1</span><button id="qp">+</button></div>
   </div>
   <button class="go" id="addBtn" disabled data-t="add">Add to cart</button>
@@ -146,7 +164,22 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
   <label class="f"><span data-t="lang">Language</span><select id="sLang"></select></label>
   <label class="f"><span data-t="cur">Currency</span><select id="sCur"></select></label>
   <label class="f"><span data-t="budget">Budget for this trip (optional)</span><input id="sBud" inputmode="decimal" placeholder="0"></label>
+  <label class="sw"><span data-t="sound">Sound when a price is added</span><input type="checkbox" id="sSnd"></label>
   <button class="go" id="sSave" data-t="save">Save</button>
+</div>
+<div class="sheet" id="lsheet"><button class="x" data-close>✕</button>
+  <h3 data-t="list">Shopping list</h3>
+  <div class="row"><input class="name" id="lin" data-ph="listph" placeholder="Milk, bread, eggs…" enterkeyhint="done"><button class="mic" id="ladd" style="background:var(--acc);font-size:24px">+</button></div>
+  <div class="lst" id="lst"></div>
+  <button class="go" id="lshare" data-t="share">📤 Share the list with family</button>
+</div>
+<div class="sheet" id="csheet"><button class="x" data-close>✕</button>
+  <h3 data-t="compare">Which one is cheaper?</h3>
+  <div class="two">
+    <div class="pc" id="pcA"><h4>A</h4><input id="aP" inputmode="decimal" data-ph="pricep" placeholder="Price"><input id="aS" inputmode="decimal" data-ph="sizep" placeholder="Size"><select id="aU"></select><div class="u n" id="aR"></div></div>
+    <div class="pc" id="pcB"><h4>B</h4><input id="bP" inputmode="decimal" data-ph="pricep" placeholder="Price"><input id="bS" inputmode="decimal" data-ph="sizep" placeholder="Size"><select id="bU"></select><div class="u n" id="bR"></div></div>
+  </div>
+  <div class="verdict" id="verdict"></div>
 </div>
 <div class="camv" id="camv"><video id="vid" playsinline muted autoplay></video><div class="frame"></div><p class="hint" data-t="aim">Put the price inside the box</p>
   <div class="ctop"><button id="camX" aria-label="Close">✕</button><div class="ctot"><small data-t="total">Cart total</small><b class="n" id="ctot">0</b></div></div>
@@ -159,12 +192,12 @@ header{display:flex;justify-content:space-between;align-items:center;padding:6px
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const L={
-en:{h1:"Tap “Scan prices”",h2:"Point at the price tag and tap",h3:"Your total adds up by itself",scan:"Scan prices",scansub:"Point at the price tag – it adds itself",or:"or type the price",aim:"Put the price inside the box",finish:"Done",undo:"Undo",closer:"Couldn't read it – move closer and try again",name:"English",total:"Cart total",items:n=>n==1?"1 item":n+" items",setb:"Set a budget",left:"left",over:"over budget",add:"Add to cart",addp:p=>"Add "+p,incart:"In your cart",clear:"Clear",done:"✓ Paid – start a new cart",settings:"Settings",lang:"Language",cur:"Currency",budget:"Budget for this trip (optional)",save:"Save",nameph:"Item name (optional)",item:"Item",added:"Added ✓",near:"Almost at your budget",overT:"Over budget!",cleared:"Cart cleared",again:"Tap again to clear",saved:"Saved ✓",month:t=>"This month: "+t,reading:"Reading the price…",found:"Price found – check it",nofound:"Couldn't read it – type the price",offline:"Scanning needs internet – type the price",paid:t=>"Saved "+t+" ✓"},
-fr:{h1:"Appuyez sur « Scanner »",h2:"Visez l’étiquette et appuyez",h3:"Le total se calcule tout seul",scan:"Scanner les prix",scansub:"Visez l’étiquette – le prix s’ajoute tout seul",or:"ou tapez le prix",aim:"Placez le prix dans le cadre",finish:"Terminé",undo:"Annuler",closer:"Illisible – approchez-vous et réessayez",name:"Français",total:"Total du panier",items:n=>n<=1?n+" article":n+" articles",setb:"Fixer un budget",left:"restant",over:"au-dessus",add:"Ajouter au panier",addp:p=>"Ajouter "+p,incart:"Dans votre panier",clear:"Vider",done:"✓ Payé – nouveau panier",settings:"Réglages",lang:"Langue",cur:"Devise",budget:"Budget pour ces courses (facultatif)",save:"Enregistrer",nameph:"Nom de l’article (facultatif)",item:"Article",added:"Ajouté ✓",near:"Budget presque atteint",overT:"Budget dépassé !",cleared:"Panier vidé",again:"Appuyez encore pour vider",saved:"Enregistré ✓",month:t=>"Ce mois-ci : "+t,reading:"Lecture du prix…",found:"Prix trouvé – vérifiez-le",nofound:"Illisible – tapez le prix",offline:"Le scan nécessite Internet – tapez le prix",paid:t=>t+" enregistré ✓"},
-es:{h1:"Toca “Escanear”",h2:"Apunta a la etiqueta y toca",h3:"El total se suma solo",scan:"Escanear precios",scansub:"Apunta a la etiqueta – se suma solo",or:"o escribe el precio",aim:"Pon el precio dentro del recuadro",finish:"Listo",undo:"Deshacer",closer:"No se pudo leer – acércate e inténtalo otra vez",name:"Español",total:"Total del carrito",items:n=>n==1?"1 producto":n+" productos",setb:"Poner presupuesto",left:"restante",over:"de más",add:"Añadir al carrito",addp:p=>"Añadir "+p,incart:"En tu carrito",clear:"Vaciar",done:"✓ Pagado – nuevo carrito",settings:"Ajustes",lang:"Idioma",cur:"Moneda",budget:"Presupuesto de esta compra (opcional)",save:"Guardar",nameph:"Nombre del producto (opcional)",item:"Producto",added:"Añadido ✓",near:"Casi en tu presupuesto",overT:"¡Te pasaste del presupuesto!",cleared:"Carrito vacío",again:"Toca otra vez para vaciar",saved:"Guardado ✓",month:t=>"Este mes: "+t,reading:"Leyendo el precio…",found:"Precio encontrado – revísalo",nofound:"No se pudo leer – escribe el precio",offline:"El escaneo necesita internet",paid:t=>t+" guardado ✓"},
-ar:{h1:"اضغط «امسح الأسعار»",h2:"وجّه الكاميرا للسعر واضغط",h3:"المجموع يُحسب وحده",scan:"امسح الأسعار",scansub:"وجّه الكاميرا للسعر – يُضاف وحده",or:"أو اكتب السعر",aim:"ضع السعر داخل الإطار",finish:"تم",undo:"تراجع",closer:"لم نستطع القراءة – اقترب وحاول مرة أخرى",name:"العربية",total:"مجموع السلة",items:n=>n+" منتج",setb:"حدد ميزانية",left:"متبقي",over:"تجاوزت",add:"أضف إلى السلة",addp:p=>"أضف "+p,incart:"في سلتك",clear:"إفراغ",done:"✓ دفعت – سلة جديدة",settings:"الإعدادات",lang:"اللغة",cur:"العملة",budget:"ميزانية هذا التسوق (اختياري)",save:"حفظ",nameph:"اسم المنتج (اختياري)",item:"منتج",added:"تمت الإضافة ✓",near:"اقتربت من ميزانيتك",overT:"تجاوزت الميزانية!",cleared:"تم إفراغ السلة",again:"اضغط مرة أخرى للإفراغ",saved:"تم الحفظ ✓",month:t=>"هذا الشهر: "+t,reading:"جاري قراءة السعر…",found:"وجدنا السعر – تأكد منه",nofound:"لم نستطع القراءة – اكتب السعر",offline:"المسح يحتاج الإنترنت – اكتب السعر",paid:t=>"تم حفظ "+t+" ✓"},
-pt:{h1:"Toque em “Escanear”",h2:"Aponte para a etiqueta e toque",h3:"O total soma sozinho",scan:"Escanear preços",scansub:"Aponte para a etiqueta – soma sozinho",or:"ou digite o preço",aim:"Coloque o preço dentro do quadro",finish:"Pronto",undo:"Desfazer",closer:"Não deu para ler – aproxime e tente de novo",name:"Português",total:"Total do carrinho",items:n=>n==1?"1 item":n+" itens",setb:"Definir orçamento",left:"restante",over:"acima",add:"Adicionar",addp:p=>"Adicionar "+p,incart:"No seu carrinho",clear:"Limpar",done:"✓ Pago – novo carrinho",settings:"Configurações",lang:"Idioma",cur:"Moeda",budget:"Orçamento desta compra (opcional)",save:"Salvar",nameph:"Nome do item (opcional)",item:"Item",added:"Adicionado ✓",near:"Quase no orçamento",overT:"Orçamento estourado!",cleared:"Carrinho limpo",again:"Toque de novo para limpar",saved:"Salvo ✓",month:t=>"Este mês: "+t,reading:"Lendo o preço…",found:"Preço encontrado – confira",nofound:"Não deu para ler – digite o preço",offline:"A leitura precisa de internet",paid:t=>t+" salvo ✓"},
-de:{h1:"„Preise scannen“ tippen",h2:"Auf das Preisschild halten und tippen",h3:"Die Summe rechnet sich selbst",scan:"Preise scannen",scansub:"Auf das Preisschild halten – wird automatisch addiert",or:"oder Preis eintippen",aim:"Preis in den Rahmen halten",finish:"Fertig",undo:"Rückgängig",closer:"Nicht lesbar – näher ran und nochmal",name:"Deutsch",total:"Warenkorb gesamt",items:n=>n==1?"1 Artikel":n+" Artikel",setb:"Budget festlegen",left:"übrig",over:"drüber",add:"In den Warenkorb",addp:p=>p+" hinzufügen",incart:"Im Warenkorb",clear:"Leeren",done:"✓ Bezahlt – neuer Einkauf",settings:"Einstellungen",lang:"Sprache",cur:"Währung",budget:"Budget für diesen Einkauf (optional)",save:"Speichern",nameph:"Artikelname (optional)",item:"Artikel",added:"Hinzugefügt ✓",near:"Budget fast erreicht",overT:"Budget überschritten!",cleared:"Warenkorb geleert",again:"Nochmal tippen zum Leeren",saved:"Gespeichert ✓",month:t=>"Diesen Monat: "+t,reading:"Preis wird gelesen…",found:"Preis gefunden – bitte prüfen",nofound:"Nicht lesbar – Preis eintippen",offline:"Scannen braucht Internet",paid:t=>t+" gespeichert ✓"}};
+en:{list:"Shopping list",listph:"Milk, bread, eggs…",share:"📤 Share the list with family",shareTxt:"Our shopping list 🛒",imported:"List added ✓",emptyL:"Write what you need before you go. Tick items as you shop.",compare:"Which one is cheaper?",pricep:"Price",sizep:"Size",per:u=>"per "+u,cheaper:(x,p)=>x+" is cheaper by "+p+"%",same:"Same price",sound:"Sound when a price is added",listen:"Listening… say the price",heard:"Didn't catch a price – try again",novoice:"Voice isn't supported on this phone",h1:"Tap “Scan prices”",h2:"Point at the price tag and tap",h3:"Your total adds up by itself",scan:"Scan prices",scansub:"Point at the price tag – it adds itself",or:"or type the price",aim:"Put the price inside the box",finish:"Done",undo:"Undo",closer:"Couldn't read it – move closer and try again",name:"English",total:"Cart total",items:n=>n==1?"1 item":n+" items",setb:"Set a budget",left:"left",over:"over budget",add:"Add to cart",addp:p=>"Add "+p,incart:"In your cart",clear:"Clear",done:"✓ Paid – start a new cart",settings:"Settings",lang:"Language",cur:"Currency",budget:"Budget for this trip (optional)",save:"Save",nameph:"Item name (optional)",item:"Item",added:"Added ✓",near:"Almost at your budget",overT:"Over budget!",cleared:"Cart cleared",again:"Tap again to clear",saved:"Saved ✓",month:t=>"This month: "+t,reading:"Reading the price…",found:"Price found – check it",nofound:"Couldn't read it – type the price",offline:"Scanning needs internet – type the price",paid:t=>"Saved "+t+" ✓"},
+fr:{list:"Liste de courses",listph:"Lait, pain, œufs…",share:"📤 Partager la liste en famille",shareTxt:"Notre liste de courses 🛒",imported:"Liste ajoutée ✓",emptyL:"Notez ce qu’il vous faut avant de partir. Cochez au fur et à mesure.",compare:"Lequel est le moins cher ?",pricep:"Prix",sizep:"Taille",per:u=>"le "+u,cheaper:(x,p)=>x+" est moins cher de "+p+" %",same:"Même prix",sound:"Son quand un prix est ajouté",listen:"J’écoute… dites le prix",heard:"Prix non compris – réessayez",novoice:"La voix n’est pas prise en charge sur ce téléphone",h1:"Appuyez sur « Scanner »",h2:"Visez l’étiquette et appuyez",h3:"Le total se calcule tout seul",scan:"Scanner les prix",scansub:"Visez l’étiquette – le prix s’ajoute tout seul",or:"ou tapez le prix",aim:"Placez le prix dans le cadre",finish:"Terminé",undo:"Annuler",closer:"Illisible – approchez-vous et réessayez",name:"Français",total:"Total du panier",items:n=>n<=1?n+" article":n+" articles",setb:"Fixer un budget",left:"restant",over:"au-dessus",add:"Ajouter au panier",addp:p=>"Ajouter "+p,incart:"Dans votre panier",clear:"Vider",done:"✓ Payé – nouveau panier",settings:"Réglages",lang:"Langue",cur:"Devise",budget:"Budget pour ces courses (facultatif)",save:"Enregistrer",nameph:"Nom de l’article (facultatif)",item:"Article",added:"Ajouté ✓",near:"Budget presque atteint",overT:"Budget dépassé !",cleared:"Panier vidé",again:"Appuyez encore pour vider",saved:"Enregistré ✓",month:t=>"Ce mois-ci : "+t,reading:"Lecture du prix…",found:"Prix trouvé – vérifiez-le",nofound:"Illisible – tapez le prix",offline:"Le scan nécessite Internet – tapez le prix",paid:t=>t+" enregistré ✓"},
+es:{list:"Lista de la compra",listph:"Leche, pan, huevos…",share:"📤 Compartir la lista con la familia",shareTxt:"Nuestra lista de la compra 🛒",imported:"Lista añadida ✓",emptyL:"Escribe lo que necesitas antes de salir. Márcalo mientras compras.",compare:"¿Cuál es más barato?",pricep:"Precio",sizep:"Tamaño",per:u=>"por "+u,cheaper:(x,p)=>x+" es "+p+"% más barato",same:"Mismo precio",sound:"Sonido al añadir un precio",listen:"Escuchando… di el precio",heard:"No se entendió el precio – inténtalo otra vez",novoice:"La voz no funciona en este teléfono",h1:"Toca “Escanear”",h2:"Apunta a la etiqueta y toca",h3:"El total se suma solo",scan:"Escanear precios",scansub:"Apunta a la etiqueta – se suma solo",or:"o escribe el precio",aim:"Pon el precio dentro del recuadro",finish:"Listo",undo:"Deshacer",closer:"No se pudo leer – acércate e inténtalo otra vez",name:"Español",total:"Total del carrito",items:n=>n==1?"1 producto":n+" productos",setb:"Poner presupuesto",left:"restante",over:"de más",add:"Añadir al carrito",addp:p=>"Añadir "+p,incart:"En tu carrito",clear:"Vaciar",done:"✓ Pagado – nuevo carrito",settings:"Ajustes",lang:"Idioma",cur:"Moneda",budget:"Presupuesto de esta compra (opcional)",save:"Guardar",nameph:"Nombre del producto (opcional)",item:"Producto",added:"Añadido ✓",near:"Casi en tu presupuesto",overT:"¡Te pasaste del presupuesto!",cleared:"Carrito vacío",again:"Toca otra vez para vaciar",saved:"Guardado ✓",month:t=>"Este mes: "+t,reading:"Leyendo el precio…",found:"Precio encontrado – revísalo",nofound:"No se pudo leer – escribe el precio",offline:"El escaneo necesita internet",paid:t=>t+" guardado ✓"},
+ar:{list:"قائمة التسوق",listph:"حليب، خبز، بيض…",share:"📤 شارك القائمة مع العائلة",shareTxt:"قائمة التسوق ديالنا 🛒",imported:"تمت إضافة القائمة ✓",emptyL:"اكتب ما تحتاجه قبل الخروج، وعلّم على كل شيء عند أخذه.",compare:"أيهما أرخص؟",pricep:"السعر",sizep:"الحجم",per:u=>"لكل "+u,cheaper:(x,p)=>x+" أرخص بـ "+p+"%",same:"نفس السعر",sound:"صوت عند إضافة سعر",listen:"أستمع… قل السعر",heard:"لم أفهم السعر – حاول مرة أخرى",novoice:"الصوت غير مدعوم في هذا الهاتف",h1:"اضغط «امسح الأسعار»",h2:"وجّه الكاميرا للسعر واضغط",h3:"المجموع يُحسب وحده",scan:"امسح الأسعار",scansub:"وجّه الكاميرا للسعر – يُضاف وحده",or:"أو اكتب السعر",aim:"ضع السعر داخل الإطار",finish:"تم",undo:"تراجع",closer:"لم نستطع القراءة – اقترب وحاول مرة أخرى",name:"العربية",total:"مجموع السلة",items:n=>n+" منتج",setb:"حدد ميزانية",left:"متبقي",over:"تجاوزت",add:"أضف إلى السلة",addp:p=>"أضف "+p,incart:"في سلتك",clear:"إفراغ",done:"✓ دفعت – سلة جديدة",settings:"الإعدادات",lang:"اللغة",cur:"العملة",budget:"ميزانية هذا التسوق (اختياري)",save:"حفظ",nameph:"اسم المنتج (اختياري)",item:"منتج",added:"تمت الإضافة ✓",near:"اقتربت من ميزانيتك",overT:"تجاوزت الميزانية!",cleared:"تم إفراغ السلة",again:"اضغط مرة أخرى للإفراغ",saved:"تم الحفظ ✓",month:t=>"هذا الشهر: "+t,reading:"جاري قراءة السعر…",found:"وجدنا السعر – تأكد منه",nofound:"لم نستطع القراءة – اكتب السعر",offline:"المسح يحتاج الإنترنت – اكتب السعر",paid:t=>"تم حفظ "+t+" ✓"},
+pt:{list:"Lista de compras",listph:"Leite, pão, ovos…",share:"📤 Partilhar a lista com a família",shareTxt:"A nossa lista de compras 🛒",imported:"Lista adicionada ✓",emptyL:"Escreva o que precisa antes de sair. Marque enquanto compra.",compare:"Qual é mais barato?",pricep:"Preço",sizep:"Tamanho",per:u=>"por "+u,cheaper:(x,p)=>x+" é "+p+"% mais barato",same:"Mesmo preço",sound:"Som ao adicionar um preço",listen:"A ouvir… diga o preço",heard:"Não percebi o preço – tente de novo",novoice:"A voz não funciona neste telemóvel",h1:"Toque em “Escanear”",h2:"Aponte para a etiqueta e toque",h3:"O total soma sozinho",scan:"Escanear preços",scansub:"Aponte para a etiqueta – soma sozinho",or:"ou digite o preço",aim:"Coloque o preço dentro do quadro",finish:"Pronto",undo:"Desfazer",closer:"Não deu para ler – aproxime e tente de novo",name:"Português",total:"Total do carrinho",items:n=>n==1?"1 item":n+" itens",setb:"Definir orçamento",left:"restante",over:"acima",add:"Adicionar",addp:p=>"Adicionar "+p,incart:"No seu carrinho",clear:"Limpar",done:"✓ Pago – novo carrinho",settings:"Configurações",lang:"Idioma",cur:"Moeda",budget:"Orçamento desta compra (opcional)",save:"Salvar",nameph:"Nome do item (opcional)",item:"Item",added:"Adicionado ✓",near:"Quase no orçamento",overT:"Orçamento estourado!",cleared:"Carrinho limpo",again:"Toque de novo para limpar",saved:"Salvo ✓",month:t=>"Este mês: "+t,reading:"Lendo o preço…",found:"Preço encontrado – confira",nofound:"Não deu para ler – digite o preço",offline:"A leitura precisa de internet",paid:t=>t+" salvo ✓"},
+de:{list:"Einkaufsliste",listph:"Milch, Brot, Eier…",share:"📤 Liste mit der Familie teilen",shareTxt:"Unsere Einkaufsliste 🛒",imported:"Liste hinzugefügt ✓",emptyL:"Schreib auf, was du brauchst, und hake beim Einkaufen ab.",compare:"Was ist günstiger?",pricep:"Preis",sizep:"Menge",per:u=>"pro "+u,cheaper:(x,p)=>x+" ist "+p+" % günstiger",same:"Gleicher Preis",sound:"Ton beim Hinzufügen",listen:"Ich höre… sag den Preis",heard:"Preis nicht verstanden – nochmal",novoice:"Sprache wird auf diesem Handy nicht unterstützt",h1:"„Preise scannen“ tippen",h2:"Auf das Preisschild halten und tippen",h3:"Die Summe rechnet sich selbst",scan:"Preise scannen",scansub:"Auf das Preisschild halten – wird automatisch addiert",or:"oder Preis eintippen",aim:"Preis in den Rahmen halten",finish:"Fertig",undo:"Rückgängig",closer:"Nicht lesbar – näher ran und nochmal",name:"Deutsch",total:"Warenkorb gesamt",items:n=>n==1?"1 Artikel":n+" Artikel",setb:"Budget festlegen",left:"übrig",over:"drüber",add:"In den Warenkorb",addp:p=>p+" hinzufügen",incart:"Im Warenkorb",clear:"Leeren",done:"✓ Bezahlt – neuer Einkauf",settings:"Einstellungen",lang:"Sprache",cur:"Währung",budget:"Budget für diesen Einkauf (optional)",save:"Speichern",nameph:"Artikelname (optional)",item:"Artikel",added:"Hinzugefügt ✓",near:"Budget fast erreicht",overT:"Budget überschritten!",cleared:"Warenkorb geleert",again:"Nochmal tippen zum Leeren",saved:"Gespeichert ✓",month:t=>"Diesen Monat: "+t,reading:"Preis wird gelesen…",found:"Preis gefunden – bitte prüfen",nofound:"Nicht lesbar – Preis eintippen",offline:"Scannen braucht Internet",paid:t=>t+" gespeichert ✓"}};
 const CUR=["USD","EUR","GBP","MAD","SAR","AED","EGP","DZD","TND","QAR","KWD","CAD","AUD","BRL","MXN","TRY","INR","JPY","CHF"];
 const REG={US:"USD",GB:"GBP",MA:"MAD",SA:"SAR",AE:"AED",EG:"EGP",DZ:"DZD",TN:"TND",QA:"QAR",KW:"KWD",CA:"CAD",AU:"AUD",BR:"BRL",MX:"MXN",TR:"TRY",IN:"INR",JP:"JPY",CH:"CHF"};
 const EU="AT BE CY DE EE ES FI FR GR HR IE IT LT LU LV MT NL PT SI SK".split(" ");
@@ -182,7 +215,7 @@ function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clea
 let Q=1;
 const total=()=>S.items.reduce((a,i)=>a+i.p*i.q,0);
 function lang(){const t=T();document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==="ar"?"rtl":"ltr";
-  $$("[data-t]").forEach(e=>{const v=t[e.dataset.t];if(typeof v==="string")e.textContent=v});$("#nm").placeholder=t.nameph;$("#langLbl").textContent=S.lang.toUpperCase();$("#curLbl").textContent=S.cur;$("#curSym").textContent=sym()}
+  $$("[data-t]").forEach(e=>{const v=t[e.dataset.t];if(typeof v==="string")e.textContent=v});$("#nm").placeholder=t.nameph;$$("[data-ph]").forEach(e=>{if(typeof t[e.dataset.ph]==="string")e.placeholder=t[e.dataset.ph]});$("#langLbl").textContent=S.lang.toUpperCase();$("#curLbl").textContent=S.cur;$("#curSym").textContent=sym()}
 function render(){const t=T(),tot=total(),n=S.items.reduce((a,i)=>a+i.q,0);
   $("#amt").textContent=money(tot);$("#cnt").textContent=t.items(n);
   const box=$("#tot");box.classList.toggle("has",S.budget>0);
@@ -196,7 +229,7 @@ function val(){return parseFloat(($("#pr").value||"").replace(",","."))}
 function upd(){const v=val();const ok=v>0&&v<1e7;$("#addBtn").disabled=!ok;$("#addBtn").textContent=ok?T().addp(money(v*Q)):T().add;$("#qv").textContent=Q}
 $("#pr").oninput=upd;
 $("#qm").onclick=()=>{Q=Math.max(1,Q-1);upd()};$("#qp").onclick=()=>{Q++;upd()};
-function add(){const v=val();if(!(v>0))return;S.items.push({p:Math.round(v*100)/100,q:Q,n:$("#nm").value.trim()});$("#pr").value="";$("#nm").value="";Q=1;vib();render();
+function add(){const v=val();if(!(v>0))return;S.items.push({p:Math.round(v*100)/100,q:Q,n:$("#nm").value.trim()});$("#pr").value="";$("#nm").value="";Q=1;vib();ding();render();
   const r=S.budget?total()/S.budget:0;toast(r>1?T().overT:r>=.85?T().near:T().added);$("#pr").focus()}
 $("#addBtn").onclick=add;$("#pr").onkeydown=e=>{if(e.key==="Enter")add()};$("#nm").onkeydown=e=>{if(e.key==="Enter")add()};
 $("#list").onclick=e=>{const b=e.target.closest("button[data-k]");if(!b)return;const k=+b.dataset.k;S.items[k].q+=+b.dataset.d;if(S.items[k].q<=0)S.items.splice(k,1);vib();render()};
@@ -205,10 +238,12 @@ $("#doneBtn").onclick=()=>{const tt=total();S.hist.push({d:Date.now(),t:tt,c:S.c
 // settings
 $("#sLang").innerHTML=Object.entries(L).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("");
 $("#sCur").innerHTML=CUR.map(c=>`<option>${c}</option>`).join("");
-function openSet(){$("#sLang").value=S.lang;$("#sCur").value=S.cur;$("#sBud").value=S.budget||"";$("#sheet").classList.add("on");$("#mask").classList.add("on")}
-const close=()=>{$("#sheet").classList.remove("on");$("#mask").classList.remove("on")};
+function openSet(){$("#sLang").value=S.lang;$("#sCur").value=S.cur;$("#sBud").value=S.budget||"";$("#sSnd").checked=S.snd!==false;$("#sheet").classList.add("on");$("#mask").classList.add("on")}
+const close=()=>{$$(".sheet").forEach(x=>x.classList.remove("on"));$("#mask").classList.remove("on")};
+const openSheet=id=>{$$(".sheet").forEach(x=>x.classList.toggle("on",x.id===id));$("#mask").classList.add("on")};
+$$("[data-close]").forEach(b=>b.onclick=()=>close());
 $("#setBtn").onclick=openSet;$("#budBtn").onclick=openSet;$("#mask").onclick=close;
-$("#sSave").onclick=()=>{S.lang=$("#sLang").value;S.cur=$("#sCur").value;S.budget=parseFloat(($("#sBud").value||"").replace(",","."))||0;close();lang();render();toast(T().saved)};
+$("#sSave").onclick=()=>{S.lang=$("#sLang").value;S.cur=$("#sCur").value;S.budget=parseFloat(($("#sBud").value||"").replace(",","."))||0;S.snd=$("#sSnd").checked;close();lang();render();toast(T().saved)};
 // ---------- price scanner: live camera + OCR (Tesseract), tap and it adds itself ----------
 let worker=null,stream=null,CQ=1,last=null;
 const loadT=()=>window.Tesseract?Promise.resolve(window.Tesseract):new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=()=>ok(window.Tesseract);s.onerror=no;document.head.appendChild(s)});
@@ -232,29 +267,36 @@ async function setMode(w,digits){await w.setParameters(digits?{tessedit_pageseg_
 async function readPrice(b){const w=await getWorker();await setMode(w,false);
   for(const [hgt,inv] of [[120,false],[120,true],[80,false],[80,true],[180,false]]){const c=draw(b,hgt,inv);const best=pick((await w.recognize(c)).data);
     if(!best)continue;
-    if(best.dec)return best.v;
+    const name=nameFrom(best);
+    if(best.dec)return {v:best.v,name};
     // whole number found: look for small raised cents just right of it (89⁹⁵ -> 89.95)
-    const ct=await cents(w,c,best);await setMode(w,false);return ct!=null?parseFloat(best.int+"."+ct):best.v}
+    const ct=await cents(w,c,best);await setMode(w,false);return {v:ct!=null?parseFloat(best.int+"."+ct):best.v,name}}
   return null}
+// product name: the clearest line of words above the price (e.g. "LAIT DEMI-ECREME 1L")
+const NOISE=/^(dh|mad|eur|euro|euros|usd|prix|price|promo|le|la|kg|l|g|ml|cl|ttc|ht|ref|par|per|au|the|de|du|des)$/i;
+function nameFrom(b){const ws=(b.words||[]).filter(w=>w.confidence>=70&&/[a-zà-ÿ\u0600-\u06ff]{2,}/i.test(w.text)&&!NOISE.test(w.text.replace(/[^\w\u0600-\u06ff]/g,""))&&w.bbox.y1<=b.y0+b.h*.2);
+  if(!ws.length)return "";const lines={};ws.forEach(w=>{const k=Math.round(w.bbox.y0/12);(lines[k]=lines[k]||[]).push(w)});
+  const best=Object.values(lines).sort((a,c)=>c.reduce((s,w)=>s+w.bbox.y1-w.bbox.y0,0)/c.length-a.reduce((s,w)=>s+w.bbox.y1-w.bbox.y0,0)/a.length)[0];
+  const t=best.sort((a,c)=>a.bbox.x0-c.bbox.x0).map(w=>w.text).join(" ").replace(/\s+/g," ").trim().toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1,30)}
 async function cents(w,c,b){const n=b.int.length;await setMode(w,true);
   for(const k of [.6,.5]){const x=b.x0+n*k*b.h,y=Math.max(0,b.y0-b.h*.15),cw=Math.min(b.h,c.width-x),ch=b.h*.7;if(cw<8)continue;
     const s=document.createElement("canvas");s.width=cw*3;s.height=ch*3;s.getContext("2d").drawImage(c,x,y,cw,ch,0,0,s.width,s.height);
     const t=((await w.recognize(s)).data.text||"").replace(/\D/g,"");if(t.length>=2)return t.slice(-2)}
   return null}
 async function shoot(){const btn=$("#shut");if(btn.classList.contains("busy"))return;btn.classList.add("busy");vib();
-  try{const b=frameBox();const p=b?await readPrice(b):null;
-    if(p){S.items.push({p,q:CQ,n:""});last=S.items.length-1;save();ctot();showRes(p*CQ,CQ);CQ=1;$("#cqv").textContent=1;try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
+  try{const b=frameBox();const r=b?await readPrice(b):null;
+    if(r){S.items.push({p:r.v,q:CQ,n:r.name});last=S.items.length-1;save();ctot();ding();showRes(r.v*CQ,CQ,r.name);CQ=1;$("#cqv").textContent=1;try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}}
     else showErr(T().closer)}
   catch(e){showErr(T().offline)}
   btn.classList.remove("busy")}
 $("#shut").onclick=shoot;
-function showRes(v,q){const r=$("#res");r.className="res on";r.innerHTML=`<b class="n">+ ${money(v)}</b><button id="rEdit">✏️</button><button id="rUndo">${T().undo}</button>`;
+function showRes(v,q,nm){const r=$("#res");r.className="res on";r.innerHTML=`<b class="n">+ ${money(v)}${nm?`<small>${esc(nm)}</small>`:""}</b><button id="rEdit">✏️</button><button id="rUndo">${T().undo}</button>`;
   $("#rUndo").onclick=()=>{if(last!=null){S.items.splice(last,1);last=null;save();ctot()}r.className="res"};
   $("#rEdit").onclick=()=>{if(last!=null){const it=S.items.splice(last,1)[0];last=null;closeCam();$("#pr").value=it.p;Q=it.q;upd();$("#pr").focus()}}}
 function showErr(t){const r=$("#res");r.className="res on err";r.innerHTML=`<b>${t}</b>`}
 // photo fallback (when the browser gives no live camera)
 $("#file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;$("#scanning").classList.add("on");
-  try{const im=await loadImg(f);const p=await readPrice({img:im,x:0,y:0,w:im.width,h:im.height});if(p){S.items.push({p,q:1,n:""});render();toast("+ "+money(p))}else toast(T().nofound)}catch(err){toast(T().offline)}
+  try{const im=await loadImg(f);const r=await readPrice({img:im,x:0,y:0,w:im.width,h:im.height});if(r){S.items.push({p:r.v,q:1,n:r.name});ding();render();toast("+ "+money(r.v))}else toast(T().nofound)}catch(err){toast(T().offline)}
   $("#scanning").classList.remove("on")};
 function loadImg(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=URL.createObjectURL(f)})}
 // choose the price: the tallest number; "12,99"/"12.99" preferred; neighbouring digit pieces of the same size joined
@@ -263,8 +305,44 @@ function pick(d){let ws=(d.words||[]).filter(w=>w.confidence==null||w.confidence
   let best=null;
   for(const w of ws){const t=w.t.replace(",",".").replace(/^\.+|\.+$/g,"");if(!/^\d{1,5}(\.\d{1,2})?$/.test(t))continue;const v=parseFloat(t);if(!(v>0&&v<1e5))continue;
     const dec=t.includes("."),sc=w.h*(dec?1.5:1);if(!best||sc>best.s)best={v,s:sc,dec,int:t.split(".")[0],x0:w.x0,y0:w.y0,h:w.h}}
-  return best}
-lang();render();
+  if(best)best.words=d.words||[];return best}
+// ---------- sound: a short "ding" like the checkout scanner ----------
+let actx=null;function ding(){if(S.snd===false)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
+  [[1320,0],[1760,.09]].forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(.18,t+d+.01);g.gain.exponentialRampToValueAtTime(.001,t+d+.18);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.2)})}catch(e){}}
+// ---------- voice: "12 dirhams 50", "douze euros", "4,99" ----------
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const VL={en:"en-US",fr:"fr-FR",es:"es-ES",ar:"ar-MA",pt:"pt-PT",de:"de-DE"};
+function parseSpoken(txt){const t=txt.toLowerCase().replace(/(\d),(\d)/g,"$1.$2");const nums=t.match(/\d+(\.\d+)?/g);if(!nums)return null;
+  let v=parseFloat(nums[0]);if(nums.length>1&&!nums[0].includes(".")&&/^\d{1,2}$/.test(nums[1]))v=parseFloat(nums[0]+"."+nums[1].padStart(2,"0"));
+  const name=txt.replace(/\d+([.,]\d+)?/g,"").replace(/\b(dirhams?|dh|mad|euros?|€|dollars?|\$|cents?|centimes?|and|et|y|e|und|درهم|دراهم|سنتيم|و)\b/gi,"").replace(/\s+/g," ").trim();
+  return v>0?{v,name}:null}
+$("#micBtn").onclick=()=>{if(!SR)return toast(T().novoice);const r=new SR();r.lang=VL[S.lang]||"en-US";r.interimResults=false;r.maxAlternatives=3;
+  const b=$("#micBtn");b.classList.add("on");toast(T().listen);
+  r.onresult=e=>{let got=null;for(const a of e.results[0]){got=parseSpoken(a.transcript);if(got)break}
+    if(got){$("#pr").value=got.v;if(got.name&&!$("#nm").value)$("#nm").value=got.name.slice(0,30);upd();add()}else toast(T().heard)};
+  r.onerror=()=>toast(T().heard);r.onend=()=>b.classList.remove("on");try{r.start()}catch(e){b.classList.remove("on")}};
+// ---------- shopping list (shared by link) ----------
+S.list=S.list||[];
+function renderL(){const n=S.list.filter(x=>!x.d).length;$("#listN").hidden=!n;$("#listN").textContent=n;
+  $("#lst").innerHTML=S.list.length?S.list.map((x,k)=>`<div class="li ${x.d?"d":""}" data-k="${k}"><span class="bx">${x.d?"✓":""}</span><b>${esc(x.t)}</b><button class="del" data-del="${k}">✕</button></div>`).join(""):`<p style="color:var(--mut);font-size:13.5px;padding:14px 4px">${T().emptyL}</p>`}
+function addL(){const v=$("#lin").value.trim();if(!v)return;v.split(/[,،\n]/).map(x=>x.trim()).filter(Boolean).forEach(t=>S.list.push({t,d:0}));$("#lin").value="";save();renderL();$("#lin").focus()}
+$("#listBtn").onclick=()=>{renderL();openSheet("lsheet")};$("#ladd").onclick=addL;$("#lin").onkeydown=e=>{if(e.key==="Enter")addL()};
+$("#lst").onclick=e=>{const d=e.target.closest("[data-del]");if(d){S.list.splice(+d.dataset.del,1);save();return renderL()}const r=e.target.closest(".li");if(!r)return;const x=S.list[+r.dataset.k];x.d=x.d?0:1;vib();save();renderL()};
+$("#lshare").onclick=async()=>{const items=S.list.filter(x=>!x.d).map(x=>x.t);if(!items.length)return toast(T().emptyL);
+  const url=location.origin+location.pathname+"#list="+encodeURIComponent(items.join("|"));const text=T().shareTxt+"\n"+items.map(x=>"• "+x).join("\n")+"\n\n"+url;
+  if(navigator.share){try{await navigator.share({title:"CartSum",text});return}catch(e){}}location.href="https://wa.me/?text="+encodeURIComponent(text)};
+function importList(){const m=location.hash.match(/^#list=(.+)$/);if(!m)return;const items=decodeURIComponent(m[1]).split("|").map(x=>x.trim()).filter(Boolean).slice(0,100);
+  const have=new Set(S.list.map(x=>x.t.toLowerCase()));items.forEach(t=>{if(!have.has(t.toLowerCase()))S.list.push({t:t.slice(0,60),d:0})});save();history.replaceState(null,"",location.pathname);renderL();openSheet("lsheet");toast(T().imported)}
+// ---------- compare two packs: price per kg / litre / piece ----------
+const UNITS=[["g",.001,"kg"],["kg",1,"kg"],["ml",.001,"L"],["L",1,"L"],["pcs",1,"pcs"]];
+$("#aU").innerHTML=$("#bU").innerHTML=UNITS.map(u=>`<option value="${u[0]}">${u[0]}</option>`).join("");$("#aU").value=$("#bU").value="g";
+function unitPrice(p,sz,u){const U=UNITS.find(x=>x[0]===u);const q=sz*U[1];return p>0&&q>0?{v:p/q,base:U[2]}:null}
+function cmp(){const g=id=>parseFloat(($(id).value||"").replace(",","."));const A=unitPrice(g("#aP"),g("#aS"),$("#aU").value),B=unitPrice(g("#bP"),g("#bS"),$("#bU").value),t=T();
+  $("#aR").textContent=A?money(A.v)+" "+t.per(A.base):"";$("#bR").textContent=B?money(B.v)+" "+t.per(B.base):"";$("#pcA").classList.remove("win");$("#pcB").classList.remove("win");$("#verdict").textContent="";
+  if(A&&B&&A.base===B.base){if(Math.abs(A.v-B.v)<1e-9)return $("#verdict").textContent=t.same;const w=A.v<B.v?"A":"B",p=Math.round(Math.abs(A.v-B.v)/Math.max(A.v,B.v)*100);$("#pc"+w).classList.add("win");$("#verdict").textContent="✅ "+t.cheaper(w,p)}}
+["#aP","#aS","#bP","#bS"].forEach(i=>$(i).oninput=cmp);["#aU","#bU"].forEach(i=>$(i).onchange=cmp);
+$("#cmpBtn").onclick=()=>{cmp();openSheet("csheet")};
+const _render=render;render=function(){_render();renderL()};
+lang();render();importList();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
