@@ -187,3 +187,16 @@ footer a:hover{text-decoration:underline}
 footer .wrap>div:first-child{display:flex;flex-wrap:wrap;row-gap:8px;min-width:0}
 footer a{display:inline-block}
 html,body{overflow-x:hidden}
+/* seasonal Christmas hero */
+.hero.xmas{background:radial-gradient(1200px 500px at 85% 20%,#1f6b47 0%,transparent 60%),radial-gradient(900px 500px at 0% 100%,#7a1420 0%,transparent 55%),#0f3b2a;border-bottom:0;position:relative}
+.hero.xmas::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.55) 1.4px,transparent 1.6px),radial-gradient(rgba(255,255,255,.3) 1px,transparent 1.2px);background-size:90px 90px,47px 47px;background-position:0 0,23px 31px;pointer-events:none}
+.hero.xmas .wrap{position:relative}
+.hero.xmas h1{color:#fff}
+.hero.xmas h1 em{font-style:normal;color:#f6d36b}
+.hero.xmas p{color:#dbe9e1}
+.hero.xmas .btn{background:#f6d36b;border-color:#f6d36b;color:#1a2a1f}
+.hero.xmas .btn:hover{background:#ffe08a;border-color:#ffe08a}
+.hero.xmas .btn.ghost{background:transparent;border-color:#fff;color:#fff}
+.hero.xmas .btn.ghost:hover{background:rgba(255,255,255,.12)}
+.hero.xmas .facts li{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff}
+.hero.xmas .note{background:#c8102e;color:#fff}
